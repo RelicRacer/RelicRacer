@@ -63,6 +63,57 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .oc-again{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px;padding:4px}
 @media (max-width:640px){.screen{display:flex;flex-direction:column}.over-cta{order:2;position:static;background:#16173a;border-top:1px solid var(--line);padding:16px}.btn.big{font-size:18px}}
 
+/* phones and touch screens */
+@media (max-width:700px){
+  .wrap{gap:16px;padding-block:12px 32px}
+  .brand h1{font-size:24px}
+  .brand span{display:none}
+  .purse{gap:6px;width:100%}
+  .chip{padding:5px 10px;font-size:14px}
+  .acct{padding:16px;gap:14px}
+  .acct-copy p{font-size:15px}
+  .cabinet{padding:6px;border-radius:12px;margin-left:calc(-1 * max(10px, env(safe-area-inset-left, 0px)) + 4px);margin-right:calc(-1 * max(10px, env(safe-area-inset-right, 0px)) + 4px)}
+  .controls{padding:8px 2px 2px;gap:8px}
+  .runner-now{order:2;font-size:12px}
+}
+
+.tap-hint{display:none;color:var(--muted);font-size:14px;text-align:center;width:100%}
+@media (pointer:coarse){ .keys{display:none} .tap-hint{display:block} .controls{flex-direction:column;align-items:stretch} .runner-now{justify-content:center} }
+
+/* turn-your-phone overlay: shown only on touch phones held sideways */
+.rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;
+  background:var(--night);padding:24px max(24px, env(safe-area-inset-right, 0px)) 24px max(24px, env(safe-area-inset-left, 0px))}
+.rotate h2{font-size:28px;color:var(--sand)} .rotate p{margin:0;color:var(--muted);font-size:16px}
+.rotate .phone{width:46px;height:78px;border:4px solid var(--sand);border-radius:10px;position:relative;animation:tilt 2s ease-in-out infinite}
+.rotate .phone::after{content:"";position:absolute;left:50%;bottom:5px;width:10px;height:3px;margin-left:-5px;border-radius:2px;background:var(--sand)}
+@keyframes tilt{0%,30%{transform:rotate(-90deg)}60%,100%{transform:rotate(0)}}
+@media (pointer:coarse) and (orientation:landscape) and (max-height:520px){ .rotate{display:flex} body{overflow:hidden} }
+
+/* full-screen chest opening */
+.chest-full{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:radial-gradient(circle at 50% 45%, #2c2766 0, #0b0b20 75%);
+  padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.cf-rays{position:absolute;left:50%;top:44%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;opacity:0;transition:opacity .4s;
+  background:repeating-conic-gradient(from 0deg, var(--cf, #ffd34d) 0deg 7deg, transparent 7deg 22deg);
+  -webkit-mask:radial-gradient(circle, #000 0, transparent 55%);mask:radial-gradient(circle, #000 0, transparent 55%);animation:spin 18s linear infinite}
+.chest-full.revealed .cf-rays{opacity:.28}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cf-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:min(100%,520px)}
+.cf-char{width:min(56vw,250px);height:min(56vw,250px);opacity:0;transform:translateY(40%) scale(.3)}
+.chest-full.revealed .cf-char{animation:rise .7s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.cf-chest{width:min(52vw,230px);height:min(52vw,230px);margin-top:-14%}
+.chest-full.shaking .cf-chest{animation:shake .12s linear infinite}
+.cf-info{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;opacity:0;transform:translateY(10px);transition:opacity .4s .35s, transform .4s .35s}
+.chest-full.revealed .cf-info{opacity:1;transform:none}
+.cf-tier{font-family:var(--display);font-size:clamp(18px,5vw,24px);letter-spacing:.14em;text-transform:uppercase;padding:4px 16px;border-radius:999px;border:2px solid currentColor}
+.cf-name{font-family:var(--display);font-weight:700;font-size:clamp(30px,9vw,46px);line-height:1.05;text-wrap:balance}
+.cf-note{color:var(--muted);font-size:16px}
+.cf-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.cf-hint{color:var(--muted);font-size:15px;font-family:var(--display);height:1.4em}
+.chest-full.revealed .cf-hint{display:none}
+@media (prefers-reduced-motion: reduce){ .cf-rays{animation:none} .chest-full.shaking .cf-chest{animation:none} .chest-full.revealed .cf-char{animation:none;opacity:1;transform:none} }
+
 /* leaderboard + records */
 .lbgrid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
 @media (max-width:820px){.lbgrid{grid-template-columns:minmax(0,1fr)}}
@@ -90,13 +141,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 /* cabinet */
 .cabinet{background:linear-gradient(#262a5c,#1a1c42);border:2px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
 .screen{position:relative;border-radius:8px;overflow:hidden;background:#0c0d24}
-canvas#game{display:block;width:100%;height:auto;aspect-ratio:8/3;image-rendering:pixelated;touch-action:none}
+canvas#game{display:block;width:100%;height:auto;aspect-ratio:8/3;image-rendering:pixelated;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .controls{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 4px 2px}
 .keys{color:var(--muted);font-size:13px}
 kbd{font-family:var(--display);background:var(--night);border:1px solid var(--line);border-bottom-width:3px;border-radius:5px;padding:0 6px;color:var(--ink);font-size:12px}
-.pads{display:flex;gap:10px}
-.pad{min-width:96px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);border-bottom-width:4px;background:var(--panel);color:var(--ink);font-family:var(--display);font-size:16px;user-select:none;-webkit-user-select:none;touch-action:none}
-.pad:active,.pad.on{transform:translateY(2px);border-bottom-width:2px;background:#2a2e66}
 .runner-now{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
 .runner-now canvas{width:40px;height:40px}
 .runner-now b{color:var(--ink);font-weight:700}
@@ -119,11 +167,7 @@ kbd{font-family:var(--display);background:var(--night);border:1px solid var(--li
 .chest-stage canvas{width:150px;height:150px}
 .chest-stage.shake canvas#chestCv{animation:shake .14s linear infinite}
 @keyframes shake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-3px,1px) rotate(-3deg)}50%{transform:translate(2px,-1px) rotate(2deg)}75%{transform:translate(-1px,2px) rotate(-1deg)}100%{transform:translate(0,0)}}
-.reveal{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:12px;background:radial-gradient(circle at 50% 45%, var(--glow, #4aa8ff55) 0, transparent 65%)}
-.reveal canvas{width:120px;height:120px}
-.reveal .rname{font-family:var(--display);font-size:22px}
 .tag{display:inline-block;font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:2px 9px;border-radius:999px;border:1px solid currentColor}
-.reveal .note{font-size:13px;color:var(--muted)}
 .chest-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .progress{height:10px;border-radius:99px;background:#121334;border:1px solid var(--line);overflow:hidden}
 .progress i{display:block;height:100%;background:linear-gradient(90deg,#f2b33d,#ffe08a);width:0;transition:width .3s}
@@ -234,8 +278,8 @@ window.FIREBASE_CONFIG = {
     </div><canvas id="game" width="960" height="360" aria-label="Relic Runner game screen. Press space or tap to start."></canvas></div>
     <div class="controls">
       <div class="runner-now"><canvas id="nowCv" width="80" height="80"></canvas><div>Running as <b id="nowName">—</b><br><span id="nowPerk"></span></div></div>
-      <div class="keys"><kbd>Space</kbd> / <kbd>↑</kbd> jump (hold for higher) · <kbd>↓</kbd> duck · <kbd>P</kbd> pause</div>
-      <div class="pads"><button class="pad" id="padJump" type="button">Jump</button><button class="pad" id="padDuck" type="button">Duck</button></div>
+      <div class="keys"><kbd>Space</kbd>, <kbd>↑</kbd> or click to jump (hold for higher) · <kbd>P</kbd> pause</div>
+      <div class="tap-hint">Tap the game to jump. Hold for a higher jump.</div>
     </div>
   </section>
 
@@ -264,17 +308,10 @@ window.FIREBASE_CONFIG = {
       <p class="sub">Save up 100 coins and crack open a chest for a random runner. Duplicates pay back coins.</p>
       <div class="chest-stage" id="chestStage">
         <canvas id="chestCv" width="300" height="300"></canvas>
-        <div class="reveal" id="reveal" hidden>
-          <canvas id="revealCv" width="240" height="240"></canvas>
-          <span class="tag" id="revealTier"></span>
-          <div class="rname" id="revealName"></div>
-          <div class="note" id="revealNote"></div>
-        </div>
       </div>
       <div class="progress" aria-hidden="true"><i id="chestBar"></i></div>
       <div class="chest-row">
         <button class="btn" id="openChest" type="button">Open chest · 100</button>
-        <button class="btn ghost small" id="runWithNew" type="button" hidden>Run with this one</button>
         <span class="sub" id="chestHint"></span>
       </div>
     </section>
@@ -322,6 +359,21 @@ window.FIREBASE_CONFIG = {
       </div>
     </div>
   </section>
+</div>
+<div class="rotate" id="rotate" aria-live="polite"><div class="phone" aria-hidden="true"></div><h2>Turn your phone upright</h2><p>Relic Runner plays in portrait mode only.</p></div>
+<div class="chest-full" id="chestFull" hidden role="dialog" aria-modal="true" aria-labelledby="cfName">
+  <div class="cf-rays" aria-hidden="true"></div>
+  <div class="cf-inner">
+    <canvas class="cf-char" id="cfChar" width="400" height="400" aria-hidden="true"></canvas>
+    <canvas class="cf-chest" id="cfChest" width="300" height="300" aria-hidden="true"></canvas>
+    <div class="cf-hint" id="cfHint">Opening…</div>
+    <div class="cf-info">
+      <span class="cf-tier" id="cfTier"></span>
+      <div class="cf-name" id="cfName"></div>
+      <div class="cf-note" id="cfNote"></div>
+      <div class="cf-btns"><button class="btn big" id="cfRun" type="button">Run with this one</button><button class="btn ghost" id="cfAgain" type="button">Open another · 100</button><button class="btn ghost" id="cfClose" type="button">Close</button></div>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -750,8 +802,8 @@ $("loadYes").addEventListener("click", () => {
 /* ============================== TREASURE CHEST ============================== */
 let chestBusy = false, lastPull = null;
 const chestCtx = setupCanvas($("chestCv"));
-function drawChest(open, t){
-  const ctx = chestCtx; ctx.clearRect(0,0,300,300);
+function drawChest(open, t, ctx = chestCtx){
+  ctx.clearRect(0,0,300,300);
   ctx.save(); ctx.translate(150,170); ctx.scale(6,6);
   const P=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
   P(-11,8,22,2,"rgba(0,0,0,.35)");
@@ -768,46 +820,81 @@ function rollChar(){
   const pool = CHARS.filter(c=>c.tier===tier);
   return pool[Math.floor(Math.random()*pool.length)];
 }
-$("openChest").addEventListener("click", () => {
+const cfChestCtx = setupCanvas($("cfChest")), cfCharCtx = setupCanvas($("cfChar"));
+let cfOpen = false, cfRevealed = false;
+function openChest(){
   if (chestBusy || state.coins < 100) return;
   chestBusy = true; state.coins -= 100; state.chests++;
   const c = rollChar(), isNew = !state.owned[c.id], t = TIERS[c.tier];
   state.owned[c.id] = (state.owned[c.id]||0) + 1;
   if (!isNew) state.coins += t.refund;
-  Saves.save(true);
-  $("reveal").hidden = true; $("runWithNew").hidden = true;
-  $("chestStage").classList.add("shake"); renderHUD();
+  Saves.save(true); renderHUD();
+  lastPull = c;
+  if (game.state === "running") game.paused = true;
+  const el = $("chestFull");
+  el.hidden = false; el.classList.remove("revealed"); el.classList.add("shaking");
+  el.style.setProperty("--cf", t.color);
+  $("cfHint").textContent = "Opening…";
+  cfOpen = true; cfRevealed = false; document.body.style.overflow = "hidden";
+  $("cfTier").textContent = t.name; $("cfTier").style.color = t.color;
+  $("cfName").textContent = c.name; $("cfName").style.color = c.tier >= 3 ? t.color : "var(--ink)";
+  $("cfNote").textContent = isNew ? `New runner! #${String(c.id+1).padStart(3,"0")} of ${CHARS.length}` : `You already had this one · +${t.refund} coins back`;
   setTimeout(() => {
-    $("chestStage").classList.remove("shake");
-    lastPull = c;
-    $("reveal").style.setProperty("--glow", t.color + "66");
-    $("revealTier").textContent = t.name; $("revealTier").style.color = t.color;
-    $("revealName").textContent = c.name;
-    $("revealNote").textContent = isNew ? `New runner! #${String(c.id+1).padStart(3,"0")} of ${CHARS.length}` : `Duplicate · +${t.refund} coins back`;
-    $("reveal").hidden = false; $("runWithNew").hidden = state.selected === c.id;
+    el.classList.remove("shaking"); el.classList.add("revealed"); cfRevealed = true;
+    $("cfRun").hidden = state.selected === c.id;
+    $("cfAgain").hidden = state.coins < 100;
+    $("cfAgain").textContent = "Open another · 100";
     chestBusy = false;
     renderAll();
-    toast(isNew ? `Unlocked ${c.name} (${t.name})!` : `${c.name} again: +${t.refund} coins`);
-  }, 1300);
-});
-$("runWithNew").addEventListener("click", () => { if (lastPull){ selectChar(lastPull.id); $("runWithNew").hidden = true; } });
+    setTimeout(() => ($("cfRun").hidden ? $("cfClose") : $("cfRun")).focus({preventScroll:true}), 400);
+  }, 1400);
+}
+function closeChest(){
+  if (!cfOpen || chestBusy) return;
+  cfOpen = false; $("chestFull").hidden = true; $("chestFull").classList.remove("revealed","shaking");
+  document.body.style.overflow = "";
+}
+$("openChest").addEventListener("click", openChest);
+$("cfClose").addEventListener("click", closeChest);
+$("cfAgain").addEventListener("click", () => { cfOpen = false; openChest(); });
+$("cfRun").addEventListener("click", () => { if (lastPull) selectChar(lastPull.id); closeChest(); });
 
 /* ============================== GAME ============================== */
 const cv = $("game"), ctx = setupCanvas(cv);
-const GW = 640, GH = 240, GROUND = 204, PX = 92;
-const SCALE = cv.width / GW;
+// The view is 240 game-pixels tall. Wide screens see 640 across; phones see a closer 400-wide view so everything is bigger.
+let GW = 640, SCALE = 1;
+const GH = 240, GROUND = 204, PX = 92;
+function sizeGame(){
+  const w = cv.clientWidth || cv.parentElement.clientWidth || 640;
+  GW = w < 700 ? 400 : 640;
+  // Short screens (a phone held sideways): widen the view so the game and its buttons fit on screen together
+  const room = window.innerHeight - (matchMedia("(pointer:coarse)").matches ? 120 : 160);
+  if (room > 120 && w * GH / GW > room) GW = Math.min(1000, Math.ceil(w * GH / room));
+  cv.style.aspectRatio = GW + " / " + GH;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const pw = Math.round(w * dpr), ph = Math.round(pw * GH / GW);
+  if (cv.width !== pw || cv.height !== ph){ cv.width = pw; cv.height = ph; ctx.imageSmoothingEnabled = false; }
+  SCALE = cv.width / GW;
+}
+sizeGame();
+window.addEventListener("resize", sizeGame);
+window.addEventListener("orientationchange", () => setTimeout(sizeGame, 200));
 const ROUND_LEN = r => 220 + r*80;           // meters per round
 const ROUND_SKIES = [["#1b1d4a","#4a2f6b","#c96a5a"],["#121335","#2a2a6a","#7a4f9a"],["#0b0c26","#15204f","#2b5a7a"],["#120a24","#3a1550","#8a2a5a"],["#06141c","#0d3a44","#2fb38a"]];
 const game = {
   state:"ready", t:0, speed:0, dist:0, round:1, roundDist:0, runCoins:0,
-  py:0, vy:0, onGround:true, ducking:false, jumpHeld:false,
+  py:0, vy:0, onGround:true, jumpHeld:false,
   obs:[], coins:[], parts:[], nextObs:0, nextCoin:0, banner:null, flash:0, paused:false,
 };
 const stars = Array.from({length:70},()=>({x:Math.random()*GW, y:Math.random()*140, s:Math.random()<.2?2:1, p:Math.random()*6}));
 function resetRun(){
-  Object.assign(game, {t:0, speed:300, dist:0, round:1, roundDist:0, runCoins:0, py:0, vy:0, onGround:true, ducking:false, obs:[], coins:[], parts:[], nextObs:420, nextCoin:260, banner:{text:"Round 1", sub:"Go!", t:1.6}, flash:0, paused:false});
+  Object.assign(game, {t:0, speed:300, dist:0, round:1, roundDist:0, runCoins:0, py:0, vy:0, onGround:true, obs:[], coins:[], parts:[], nextObs:420, nextCoin:260, banner:{text:"Round 1", sub:"Go!", t:1.6}, flash:0, paused:false});
 }
-function startRun(){ resetRun(); game.state = "running"; $("overCta").hidden = true; }
+function startRun(){
+  resetRun(); game.state = "running"; $("overCta").hidden = true;
+  // Bring the whole game screen and buttons into view when a run starts
+  { const r = document.querySelector(".cabinet").getBoundingClientRect(); if (r.top < 0 || r.bottom > window.innerHeight) document.querySelector(".cabinet").scrollIntoView({behavior:"smooth", block: r.height > window.innerHeight ? "start" : "center"}); }
+}
 function endRun(){
   game.state = "over"; game.overT = game.t;
   state.runs++; const d = Math.floor(game.dist);
@@ -829,14 +916,14 @@ function jumpPress(){
   if (game.onGround){ game.vy = -640; game.onGround = false; }
 }
 function jumpRelease(){ game.jumpHeld = false; if (game.vy < -300) game.vy = -300; }
-function duck(on){ game.ducking = on; if (on && !game.onGround) game.vy = Math.max(game.vy, 500); }
 
 function spawnObstacle(){
   const r = game.round, roll = Math.random();
   if (r >= 2 && roll < Math.min(.35, .15 + r*.04)){
-    const high = Math.random() < .55;
-    game.obs.push({type:"bat", x:GW+20, y: high ? GROUND-46 : GROUND-21, w:31, h:17, ph:Math.random()*6});
-    if (high){ if (Math.random() < .6) coinLine(GW+20+15-33, GROUND-10, 4); }   // duck under it to grab these
+    const high = Math.random() < .45;
+    // Low bats skim the sand (jump over them). High bats cruise above head height (stay on the ground and run under; jumping hits them).
+    game.obs.push({type:"bat", x:GW+20, y: high ? GROUND-66 : GROUND-21, w:31, h:17, ph:Math.random()*6});
+    if (high){ if (Math.random() < .7) coinLine(GW+20+15-33, GROUND-16, 4); }   // reward for staying on the ground
     else if (Math.random() < .6) coinArc(GW+20+15, 21);
   } else if (roll < .7){
     const n = 1 + (Math.random() < Math.min(.5, r*.1) ? 1 : 0) + (r>=4 && Math.random()<.2 ? 1 : 0);
@@ -888,7 +975,7 @@ function update(dt){
   game.coins.forEach(k=>{ k.x -= dx; k.spin += dt*6; });
   game.obs = game.obs.filter(o=>o.x+o.w>-20);
   // player box
-  const ph = game.ducking && game.onGround ? 22 : 38, pw = game.ducking && game.onGround ? 30 : 26;
+  const ph = 38, pw = 26;
   const pbox = {x:PX-pw/2+3, y:GROUND+game.py-ph, w:pw-6, h:ph-2};
   for (const o of game.obs){
     const ob = {x:o.x+3, y:o.y+3, w:o.w-6, h:o.h-5};
@@ -923,7 +1010,7 @@ function drawBG(){
   const scroll = game.dist*10;
   stars.forEach(s=>{ const a=.4+.4*Math.sin(game.t*2+s.p); ctx.fillStyle=`rgba(255,248,220,${a})`; ctx.fillRect(Math.floor((s.x - scroll*.02 + GW*10)%GW), s.y, s.s, s.s); });
   // moon
-  ctx.fillStyle="#f6eccf"; ctx.beginPath(); ctx.arc(470,62,16,0,Math.PI*2); ctx.fill(); ctx.fillStyle=sky[0]; ctx.beginPath(); ctx.arc(478,56,14,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#f6eccf"; ctx.beginPath(); ctx.arc(GW-170,62,16,0,Math.PI*2); ctx.fill(); ctx.fillStyle=sky[0]; ctx.beginPath(); ctx.arc(GW-162,56,14,0,Math.PI*2); ctx.fill();
   // pyramids far
   const far = (scroll*.08) % 420;
   ctx.fillStyle = "rgba(20,14,40,.55)";
@@ -974,7 +1061,7 @@ function draw(){
   game.obs.forEach(drawObs);
   game.coins.forEach(drawCoin);
   const c = CHARS[state.selected];
-  const pose = game.state !== "running" ? "idle" : (!game.onGround ? "jump" : (game.ducking ? "duck" : "run"));
+  const pose = game.state !== "running" ? "idle" : (!game.onGround ? "jump" : "run");
   ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(PX-12, GROUND+1, 24, 3);
   drawChar(ctx, c, {x:PX, y:GROUND+game.py, s:2, t:game.t, pose});
   game.parts.forEach(p=>{ ctx.globalAlpha = Math.max(0,Math.min(1,p.life*2)); if (p.txt) text(p.txt, p.x, p.y, 12, p.col, "center"); else { ctx.fillStyle=p.col; const s=p.sz||3; ctx.fillRect(p.x,p.y,s,s);} });
@@ -1003,7 +1090,7 @@ function draw(){
     ctx.fillStyle = "rgba(10,10,30,.45)"; ctx.fillRect(0,0,GW,GH);
     text("RELIC RUNNER", GW/2, 86, 34, "#e9c07a", "center");
     text("Press Space or tap to run", GW/2, 116, 15, "#f3ead9", "center");
-    text("Grab coins · clear rounds · open chests at 100", GW/2, 138, 12, "#a9a8cf", "center");
+    text(GW < 600 ? "Grab coins · open chests at 100" : "Grab coins · clear rounds · open chests at 100", GW/2, 138, 12, "#a9a8cf", "center");
   }
   if (game.state === "over"){
     ctx.fillStyle = "rgba(10,10,30,.55)"; ctx.fillRect(0,0,GW,GH);
@@ -1013,43 +1100,41 @@ function draw(){
     text(state.coins >= 100 ? "You can open a chest below" : (100-state.coins) + " coins until your next chest", GW/2, 146, 12, "#ffe08a", "center");
     text("Press Space or tap to run again", GW/2, 174, 13, "#a9a8cf", "center");
   }
-  if (game.paused){ ctx.fillStyle = "rgba(10,10,30,.5)"; ctx.fillRect(0,0,GW,GH); text("PAUSED", GW/2, 110, 28, "#f3ead9", "center"); text("Press P or Jump to continue", GW/2, 134, 12, "#a9a8cf", "center"); }
+  if (game.paused){ ctx.fillStyle = "rgba(10,10,30,.5)"; ctx.fillRect(0,0,GW,GH); text("PAUSED", GW/2, 110, 28, "#f3ead9", "center"); text("Tap or press P to continue", GW/2, 134, 12, "#a9a8cf", "center"); }
 }
 let last = performance.now();
 function frame(now){
   const dt = Math.min(.033, (now-last)/1000); last = now;
   update(dt); draw();
-  if (!chestBusy && $("reveal").hidden) drawChest(false, now/1000);
-  else if (!$("reveal").hidden) drawChest(true, now/1000);
+  drawChest(false, now/1000);
+  if (cfOpen){
+    drawChest(cfRevealed, now/1000, cfChestCtx);
+    cfCharCtx.clearRect(0,0,400,400);
+    if (cfRevealed && lastPull) drawChar(cfCharCtx, lastPull, {x:200, y:360, s:12, t:now/1000});
+  }
   // animate the current-runner preview and legendary/mythic cards
-  if (Math.floor(now/50) !== frame.k){ frame.k = Math.floor(now/50); renderNow(); cardCanvases.forEach(({ctx:cx,c})=>{ cx.clearRect(0,0,128,128); drawChar(cx,c,{x:64,y:104,s:3.6,t:now/1000}); });
-    if (!$("reveal").hidden && lastPull){ const rc=setupCanvas($("revealCv")); rc.clearRect(0,0,240,240); drawChar(rc,lastPull,{x:120,y:210,s:7,t:now/1000}); } }
+  if (Math.floor(now/50) !== frame.k){ frame.k = Math.floor(now/50); renderNow(); cardCanvases.forEach(({ctx:cx,c})=>{ cx.clearRect(0,0,128,128); drawChar(cx,c,{x:64,y:104,s:3.6,t:now/1000}); }); }
   requestAnimationFrame(frame);
 }
 
 /* ---------- input ---------- */
-const typing = () => { const a = document.activeElement; return a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT"||(a.tagName==="BUTTON"&&!a.classList.contains("pad"))); };
+const typing = () => { const a = document.activeElement; return a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT"||a.tagName==="BUTTON"); };
 document.addEventListener("keydown", e => {
+  if (cfOpen){ if (e.key === "Escape") closeChest(); return; }
   if (typing()) return;
   if (e.code==="Space"||e.code==="ArrowUp"||e.code==="KeyW"){ e.preventDefault(); if (!e.repeat) jumpPress(); }
-  else if (e.code==="ArrowDown"||e.code==="KeyS"){ e.preventDefault(); duck(true); }
   else if (e.code==="KeyP" && game.state==="running"){ game.paused = !game.paused; }
 });
 document.addEventListener("keyup", e => {
   if (e.code==="Space"||e.code==="ArrowUp"||e.code==="KeyW") jumpRelease();
-  else if (e.code==="ArrowDown"||e.code==="KeyS") duck(false);
 });
 cv.addEventListener("pointerdown", e => { e.preventDefault(); jumpPress(); });
 cv.addEventListener("pointerup", jumpRelease);
-const pad = (el, down, up) => {
-  el.addEventListener("pointerdown", e => { e.preventDefault(); el.classList.add("on"); el.setPointerCapture?.(e.pointerId); down(); });
-  const off = () => { if (el.classList.contains("on")){ el.classList.remove("on"); up(); } };
-  el.addEventListener("pointerup", off); el.addEventListener("pointercancel", off); el.addEventListener("lostpointercapture", off);
-  el.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); e.stopPropagation(); if(!e.repeat) down(); } });
-  el.addEventListener("keyup", e => { if (e.key==="Enter"||e.key===" "){ e.stopPropagation(); up(); } });
-};
-pad($("padJump"), jumpPress, jumpRelease);
-pad($("padDuck"), () => duck(true), () => duck(false));
+cv.addEventListener("pointercancel", jumpRelease);
+cv.addEventListener("pointerleave", jumpRelease);
+const sideways = matchMedia("(pointer:coarse) and (orientation:landscape) and (max-height:520px)");
+const onSideways = () => { if (sideways.matches && game.state === "running") game.paused = true; };
+sideways.addEventListener ? sideways.addEventListener("change", onSideways) : sideways.addListener(onSideways);
 document.addEventListener("visibilitychange", () => { if (document.hidden && game.state==="running") game.paused = true; });
 
 /* ============================== BOOT ============================== */
