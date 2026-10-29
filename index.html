@@ -97,7 +97,28 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .cf-rays{position:absolute;left:50%;top:44%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;opacity:0;transition:opacity .4s;
   background:repeating-conic-gradient(from 0deg, var(--cf, #ffd34d) 0deg 7deg, transparent 7deg 22deg);
   -webkit-mask:radial-gradient(circle, #000 0, transparent 55%);mask:radial-gradient(circle, #000 0, transparent 55%);animation:spin 18s linear infinite}
-.chest-full.revealed .cf-rays{opacity:.28}
+.chest-full.revealed .cf-rays{opacity:var(--rayop,.28);animation-duration:var(--rayspd,18s)}
+.chest-full[data-tier="5"].revealed .cf-rays{background:repeating-conic-gradient(from 0deg, #ff4f6b 0 6deg, transparent 6deg 15deg, #ffd34d 15deg 21deg, transparent 21deg 30deg, #5fe03a 30deg 36deg, transparent 36deg 45deg, #2de2e6 45deg 51deg, transparent 51deg 60deg, #b77bff 60deg 66deg, transparent 66deg 75deg)}
+.cf-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.cf-inner{z-index:3}
+.cf-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4}
+.cf-flash.go{animation:flash .6s ease-out}
+.cf-flash.go2{animation:flash2 1.1s ease-out}
+@keyframes flash{0%{opacity:var(--flash,.8)}100%{opacity:0}}
+@keyframes flash2{0%{opacity:1}20%{opacity:0}35%{opacity:.9}100%{opacity:0}}
+.chest-full{transition:background-color .6s}
+.chest-full.dim{background:#03020a}
+.chest-full .cf-chest{transition:filter .5s}
+.chest-full.glowing .cf-chest{filter:drop-shadow(0 0 var(--glowpx,12px) var(--cf)) drop-shadow(0 0 calc(var(--glowpx,12px) * 2) var(--cf))}
+.chest-full[data-tier="5"].glowing .cf-chest{animation:shake var(--shk,.12s) linear infinite, rainbow 1s linear infinite}
+@keyframes rainbow{to{filter:hue-rotate(360deg) drop-shadow(0 0 24px #ff4fa3)}}
+.chest-full.shaking .cf-chest{animation-duration:var(--shk,.12s)}
+.chest-full.quake .cf-inner{animation:quake .6s}
+@keyframes quake{0%,100%{transform:none}15%{transform:translate(-8px,4px)}30%{transform:translate(7px,-5px)}45%{transform:translate(-6px,-3px)}60%{transform:translate(5px,4px)}75%{transform:translate(-3px,2px)}}
+.chest-full.revealed[data-tier="3"] .cf-tier,.chest-full.revealed[data-tier="4"] .cf-tier,.chest-full.revealed[data-tier="5"] .cf-tier{animation:slam .55s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes slam{0%{transform:scale(3.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.chest-full[data-tier="4"] .cf-tier{font-size:clamp(24px,7vw,34px);box-shadow:0 0 18px rgba(255,178,63,.5)}
+.chest-full[data-tier="5"] .cf-tier{font-size:clamp(30px,9vw,44px);border-width:3px;background:linear-gradient(90deg,#ff4f6b,#ffd34d,#5fe03a,#2de2e6,#b77bff,#ff4f6b);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;border-color:#ff5ea8;animation:slam .6s cubic-bezier(.2,1.6,.4,1) both, goldshine 2s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .cf-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:min(100%,520px)}
 .cf-char{width:min(56vw,250px);height:min(56vw,250px);opacity:0;transform:translateY(40%) scale(.3)}
@@ -113,7 +134,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .cf-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
 .cf-hint{color:var(--muted);font-size:15px;font-family:var(--display);height:1.4em}
 .chest-full.revealed .cf-hint{display:none}
-@media (prefers-reduced-motion: reduce){ .cf-rays{animation:none} .chest-full.shaking .cf-chest{animation:none} .chest-full.revealed .cf-char{animation:none;opacity:1;transform:none} }
+@media (prefers-reduced-motion: reduce){ .cf-flash.go,.cf-flash.go2,.chest-full.quake .cf-inner{animation:none} .cf-rays{animation:none} .chest-full.shaking .cf-chest{animation:none} .chest-full.revealed .cf-char{animation:none;opacity:1;transform:none} }
 
 /* numbers: blocky arcade font, easy to read */
 #hudCoins,#hudOwned,#hudBest{font-family:var(--num);font-size:12px;line-height:1.4}
@@ -151,16 +172,24 @@ body.fs .fs-bar .snd-btn{background:rgba(18,12,42,.7);padding:7px 12px}
 .test-bar span{flex:1;min-width:200px;color:#e8dcb8}
 body.testing .card .num::after{content:" · TEST";color:#ffd34d}
 
+/* THE CREATOR's name: gold lettering */
+.creator{font-weight:800 !important;letter-spacing:.08em;background:linear-gradient(90deg,#ffd34d,#fff6c8,#ffb000,#fff6c8,#ffd34d);background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent !important;animation:goldshine 3s linear infinite;filter:drop-shadow(0 0 6px rgba(255,200,60,.45))}
+@keyframes goldshine{to{background-position:200% 0}}
+@media (prefers-reduced-motion: reduce){.creator{animation:none}}
+
 /* leaderboard + records */
 .lbgrid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
 @media (max-width:820px){.lbgrid{grid-template-columns:minmax(0,1fr)}}
 .lb-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .lb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:none}
-.lb li{display:grid;grid-template-columns:34px 48px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;background:#171940;border:1px solid #2a2d62}
+.lb li{display:grid;grid-template-columns:30px 72px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;background:#171940;border:1px solid #2a2d62}
 .lb li.me{border-color:var(--sand);background:#2a2650}
 .lb .rk{font-family:var(--display);font-size:18px;color:var(--muted);text-align:center}
 .lb li:nth-child(1) .rk{color:#ffd34d} .lb li:nth-child(2) .rk{color:#d6dbe6} .lb li:nth-child(3) .rk{color:#e09a5a}
-.lb canvas{width:48px;height:28px}
+.lb canvas{width:72px;height:40px}
+.lb .who2{display:flex;flex-direction:column;min-width:0}
+.lb .car{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb .sc{font-family:var(--display);font-size:17px;font-variant-numeric:tabular-nums}
 .lb .empty{display:block;color:var(--muted);text-align:center;padding:18px}
@@ -402,6 +431,8 @@ window.FIREBASE_CONFIG = {
 <div class="rotate" id="rotate" aria-live="polite"><div class="phone" aria-hidden="true"></div><h2>Turn your phone upright</h2><p>Relic Racer plays in portrait mode only.</p></div>
 <div class="chest-full" id="chestFull" hidden role="dialog" aria-modal="true" aria-labelledby="cfName">
   <div class="cf-rays" aria-hidden="true"></div>
+  <canvas class="cf-fx" id="cfFx" aria-hidden="true"></canvas>
+  <div class="cf-flash" id="cfFlash" aria-hidden="true"></div>
   <div class="cf-inner">
     <canvas class="cf-char" id="cfChar" width="400" height="400" aria-hidden="true"></canvas>
     <canvas class="cf-chest" id="cfChest" width="300" height="300" aria-hidden="true"></canvas>
@@ -534,45 +565,213 @@ const BODIES = {
 //         n=neon underglow, h=hover (no wheels), c=convertible with driver (Mason), x=gold sparkle
 const CHARS = [];
 const add = (tier, name, body, main, accent, extras) => CHARS.push({id:CHARS.length, tier, name, body, main, accent: accent || main, ex: extras || ""});
-// ---- Common (34): everyday rides
-[["Toyoda Corollo","sedan","#c9ccd6"],["Toyoda Camree","sedan","#3a4a6b"],["Toyoda Preeus","hatch","#7fd1c7"],["Toyoda Siennah","van","#e8e4dc"],
- ["Toyoda Rav-5","suv","#b8433a"],["Toyoda Tacomah","truck","#5a6b4a"],["Hondo Civix","sedan","#2f6fd1"],["Hondo Accordo","sedan","#1d1f2a"],
- ["Hondo Fitt","hatch","#f2b33d"],["Hondo Odyssee","van","#8e95a6"],["Hondo Pilotto","suv","#e6e8ee"],["Fird Focos","hatch","#d8384a"],
- ["Fird Fuzion","sedan","#5d6577"],["Fird Escapo","suv","#2fa0a8"],["Fird F-151","truck","#24314f"],["Fird Transitt","van","#f4f4f6"],
- ["Chevrolot Malibo","sedan","#9aa3b5"],["Chevrolot Sparx","hatch","#7bd36a"],["Chevrolot Equinoxx","suv","#3b2f4f"],["Chevrolot Silverada","truck","#b0b6c2"],
- ["Nissun Altimo","sedan","#f0ede6"],["Nissun Versah","hatch","#4aa8ff"],["Nissun Rogo","suv","#7a2f3a"],["Nissun Frontier-X","truck","#d9773a"],
- ["Subaro Outbak","suv","#3f6f55"],["Subaro Imprezo","hatch","#2b4fa8"],["Mazdo Trey","hatch","#c22a3a"],["Mazdo CX-6","suv","#4b4f5c"],
- ["Jeepa Wrangla","suv","#ffd34d","#1b1b22","k"],["Jeepa Cherokah","suv","#556b2f"],["Dodje Caravano","van","#6b7280"],["Kio Soule","hatch","#ff8ad8"],
- ["Hyundo Elantro","sedan","#e9e6f0"],["Volksvagon Golfo","hatch","#8fd3f0"]].forEach(([n,b,c,a,x]) => add(0,n,b,c,a,x));
-// ---- Uncommon (25): nicer, sportier, bigger
-[["BMV Tri-Serie","sedan","#1f3a8a","#2de2e6"],["BMV X-Five","suv","#2a2a33"],["Merceda C-Klass","sedan","#c9ccd6"],["Merceda G-Wagon","suv","#121218","#c9ccd6","k"],
- ["Audy A-Fiver","sedan","#5b7fa8"],["Audy Q-Ate","suv","#e6e8ee"],["Lexis RX-Lux","suv","#7a6bd1"],["Fird Bronko","suv","#ff8a3d","#1b1b22","k"],
- ["Fird Raptur","truck","#2f3b55","#ff8a3d","s"],["Chevrolot Tahoo","suv","#101016"],["Dodje Ramm","truck","#c2273a"],["Jeepa Gladiateur","truck","#2fb38a","#1b1b22","k"],
- ["Toyoda Four-Runnr","suv","#8a7a5a","#1b1b22","k"],["Rangel Rover","suv","#1f4a3a","#c9ccd6"],["Cadillax Escalado","suv","#0e0e14","#c9ccd6"],["Volvu XC-Ninety","suv","#9aa3b5"],
- ["Genesys G-Eighty","sedan","#4a2f6b"],["Kio Stingo","sedan","#ff4f6b"],["Minnie Cooperr","hatch","#2fb38a","#ffffff","s"],["Volksvagon GTE","hatch","#e6e8ee","#c2273a","s"],
- ["Mazdo Miyata","sports","#d8384a"],["Hondo Civix Tipe-R","hatch","#f4f4f6","#c2273a","w"],["Teslo Model E","sedan","#f4f4f6","#2de2e6","g"],["Teslo Model Why","suv","#2a2a33","#2de2e6","g"],
- ["Nissun Z-Classic","sports","#f2b33d"]].forEach(([n,b,c,a,x]) => add(1,n,b,c,a,x));
-// ---- Rare (18): muscle, rally and real sports cars
-[["Fird Pony GT","muscle","#2f5bd1","#ffffff","s"],["Fird Pony Shelbee","muscle","#f4f4f6","#2f5bd1","sw"],["Chevrolot Camarro","muscle","#ffd34d","#111111","s"],
- ["Chevrolot Corvetta","sports","#d8384a"],["Dodje Chargr","muscle","#ff8a3d","#111111","s"],["Dodje Challengr","muscle","#7a3cff","#111111","s"],
- ["Subaro WRZ","hatch","#2b4fa8","#ffd34d","r"],["Mitsibushi Evo-X","sedan","#e6e8ee","#d8384a","rw"],["Toyoda Supro","sports","#ff8a3d","#111111","w"],
- ["Nissun 400-Zed","sports","#2de2e6"],["Nissun GT-Arr","sports","#9aa3b5","#111111","w"],["Mazdo RX-Seven","sports","#ffd34d"],
- ["BMV M-Four","sports","#2fb38a","#111111"],["Porta Caymen","sports","#ff4fa3"],["Porta Macam","suv","#c9ccd6","#ff4fa3"],
- ["Teslo Plaid","sedan","#d8384a","#111111","g"],["Audy RS-Six","sedan","#5d6577","#d8384a"],["Lexis LC-Five","sports","#f4f4f6","#ffd34d"]].forEach(([n,b,c,a,x]) => add(2,n,b,c,a,x));
-// ---- Epic (12): supercars and wild ones
-[["Porta Carrero GT","sports","#c9ccd6","#ff4fa3","w"],["Porta GT-Tre RS","sports","#ffd34d","#111111","w"],["Audy R-Ate","super","#e6e8ee","#2de2e6"],
- ["Merceda AMG Black","sports","#121218","#ff8a3d","w"],["Chevrolot Corvetta Z-07","super","#ff8a3d","#111111","s"],["Fird GT-Forty","super","#2f5bd1","#ffffff","s"],
- ["Lexis LF-Zed","super","#e6e8ee","#2de2e6"],["Astin Marten Vantij","sports","#1f4a3a","#c9ccd6"],["BMV M-Ate","sports","#2de2e6","#111111"],
- ["Nissun GT-Arr Nizmo","sports","#f4f4f6","#d8384a","sw"],["Dodje Vypr","muscle","#d8384a","#ffffff","sw"],["Teslo Cyber-Truk","wedgetruck","#b9bcc9","#2de2e6"]].forEach(([n,b,c,a,x]) => add(3,n,b,c,a,x));
-// ---- Legendary (6): the dream garage
-[["Felari Rossa SF","super","#e01e2e","#ffd34d","w"],["Landoni Toro Giallo","super","#ffd400","#111111"],["Landoni Verde Fury","super","#5fe03a","#111111","w"],
- ["MqQarrel P-Uno","hyper","#ff7a1a","#111111","w"],["Koenigsberg Jeska","hyper","#f4f4f6","#2de2e6","w"],["Bugotti Chirone","hyper","#1d3a8a","#2de2e6"]].forEach(([n,b,c,a,x]) => add(4,n,b,c,a,x));
-// ---- Mythic (5)
-add(5,"Felari Inferno","hyper","#c4101e","#ffb000","wfn");
-add(5,"Landoni Neon Phantom","super","#14101e","#ff4fa3","wn");
-add(5,"Bugotti Solar Crown","hyper","#f2c14e","#fff3b0","xn");
-add(5,"Teslo Hover-X","sedan","#f4f4f6","#2de2e6","hgn");
-add(5,"Hundahi Elytra","tuner","#c3c7d0","#e01e2e","wdlmn");   // Mason's car, with Mason at the wheel — new cars always go at the END of this list
+const CAR_LIST = [ // [tier, name, body, main color, accent, extras]. New cars always go at the END.
+[0, "Pembrook Pebble", "sedan", "#c9ccd6", null, ""],
+[0, "Mossgrove Doodle", "sedan", "#3a4a6b", null, ""],
+[0, "Noodleworth Biscuit", "hatch", "#7fd1c7", null, ""],
+[0, "Puddleby Muffin", "van", "#e8e4dc", null, ""],
+[0, "Pottersly Turnip", "suv", "#b8433a", null, ""],
+[0, "Fizzwick Noodle", "truck", "#5a6b4a", null, ""],
+[0, "Crumbleton Pickle", "sedan", "#2f6fd1", null, ""],
+[0, "Picklebury Button", "sedan", "#1d1f2a", null, ""],
+[0, "Tinkerly Teacup", "hatch", "#f2b33d", null, ""],
+[0, "Bumblewick Dumpling", "van", "#8e95a6", null, ""],
+[0, "Brindle Waffle", "suv", "#e6e8ee", null, ""],
+[0, "Wigglesby Pudding", "hatch", "#d8384a", null, ""],
+[0, "Pembrook Sprout", "sedan", "#5d6577", null, ""],
+[0, "Mossgrove Tater", "suv", "#2fa0a8", null, ""],
+[0, "Noodleworth Bagel", "truck", "#24314f", null, ""],
+[0, "Puddleby Marble", "van", "#f4f4f6", null, ""],
+[0, "Pottersly Thimble", "sedan", "#9aa3b5", null, ""],
+[0, "Fizzwick Gumdrop", "hatch", "#7bd36a", null, ""],
+[0, "Crumbleton Pancake", "suv", "#3b2f4f", null, ""],
+[0, "Picklebury Cobble", "truck", "#b0b6c2", null, ""],
+[0, "Tinkerly Crouton", "sedan", "#f0ede6", null, ""],
+[0, "Bumblewick Scone", "hatch", "#4aa8ff", null, ""],
+[0, "Brindle Pretzel", "suv", "#7a2f3a", null, ""],
+[0, "Wigglesby Nugget", "truck", "#d9773a", null, ""],
+[0, "Pembrook Tumble", "suv", "#3f6f55", null, ""],
+[0, "Mossgrove Puffin", "hatch", "#2b4fa8", null, ""],
+[0, "Noodleworth Wombat", "hatch", "#c22a3a", null, ""],
+[0, "Puddleby Hedgehog", "suv", "#4b4f5c", null, ""],
+[0, "Pottersly Badger", "suv", "#ffd34d", "#1b1b22", "k"],
+[0, "Fizzwick Otter", "suv", "#556b2f", null, ""],
+[0, "Crumbleton Kipper", "van", "#6b7280", null, ""],
+[0, "Picklebury Snail", "hatch", "#ff8ad8", null, ""],
+[0, "Tinkerly Pipsqueak", "sedan", "#e9e6f0", null, ""],
+[0, "Bumblewick Haybale", "hatch", "#8fd3f0", null, ""],
+[1, "Trailmark Mudlark", "sedan", "#1f3a8a", "#2de2e6", ""],
+[1, "Hollowpine Gravelhound", "suv", "#2a2a33", null, ""],
+[1, "Granitecrest Burrowback", "sedan", "#c9ccd6", null, ""],
+[1, "Rivermoor Ploughwright", "suv", "#121218", "#c9ccd6", "k"],
+[1, "Bramblecar Hillgoat", "sedan", "#5b7fa8", null, ""],
+[1, "Oxenfold Bramblebuck", "suv", "#e6e8ee", null, ""],
+[1, "Stonewick Boulderpaw", "suv", "#7a6bd1", null, ""],
+[1, "Quarryman Fernrunner", "suv", "#ff8a3d", "#1b1b22", "k"],
+[1, "Trailmark Mosshauler", "truck", "#2f3b55", "#ff8a3d", "s"],
+[1, "Hollowpine Thistledown", "suv", "#101016", null, ""],
+[1, "Granitecrest Brookstrider", "truck", "#c2273a", null, ""],
+[1, "Rivermoor Hayride", "truck", "#2fb38a", "#1b1b22", "k"],
+[1, "Bramblecar Woolpack", "suv", "#8a7a5a", "#1b1b22", "k"],
+[1, "Oxenfold Timberkit", "suv", "#1f4a3a", "#c9ccd6", ""],
+[1, "Stonewick Gullyhopper", "suv", "#0e0e14", "#c9ccd6", ""],
+[1, "Quarryman Driftmoss", "suv", "#9aa3b5", null, ""],
+[1, "Trailmark Puddleproof", "sedan", "#4a2f6b", null, ""],
+[1, "Hollowpine Pinewhistle", "sedan", "#ff4f6b", null, ""],
+[1, "Granitecrest Rootbeard", "hatch", "#2fb38a", "#ffffff", "s"],
+[1, "Rivermoor Cragmouse", "hatch", "#e6e8ee", "#c2273a", "s"],
+[1, "Bramblecar Saddlebag", "sports", "#d8384a", null, ""],
+[1, "Oxenfold Lanternback", "hatch", "#f4f4f6", "#c2273a", "w"],
+[1, "Stonewick Sledgeboar", "sedan", "#f4f4f6", "#2de2e6", "g"],
+[1, "Quarryman Cobblebeast", "suv", "#2a2a33", "#2de2e6", "g"],
+[1, "Trailmark Shalebuck", "sports", "#f2b33d", null, ""],
+[2, "Razorline Blitzfox", "muscle", "#2f5bd1", "#ffffff", "s"],
+[2, "Zorvek Razorkite", "muscle", "#f4f4f6", "#2f5bd1", "sw"],
+[2, "Velloria Hexdrift", "muscle", "#ffd34d", "#111111", "s"],
+[2, "Hexwind Snapjaw", "sports", "#d8384a", null, ""],
+[2, "Quillon Swiftclaw", "muscle", "#ff8a3d", "#111111", "s"],
+[2, "Kestrava Zapwing", "muscle", "#7a3cff", "#111111", "s"],
+[2, "Skorra Sparkfin", "hatch", "#2b4fa8", "#ffd34d", "r"],
+[2, "Dravik Flintstrike", "sedan", "#e6e8ee", "#d8384a", "rw"],
+[2, "Razorline Dashhound", "sports", "#ff8a3d", "#111111", "w"],
+[2, "Zorvek Glintrunner", "sports", "#2de2e6", null, ""],
+[2, "Velloria Rocketmouse", "sports", "#9aa3b5", "#111111", "w"],
+[2, "Hexwind Cindersprint", "sports", "#ffd34d", null, ""],
+[2, "Quillon Quickquill", "sports", "#2fb38a", "#111111", ""],
+[2, "Kestrava Sizzlecat", "sports", "#ff4fa3", null, ""],
+[2, "Skorra Jetbadger", "suv", "#c9ccd6", "#ff4fa3", ""],
+[2, "Dravik Thrumhawk", "sedan", "#d8384a", "#111111", "g"],
+[2, "Razorline Volthare", "sedan", "#5d6577", "#d8384a", ""],
+[2, "Zorvek Skidfox", "sports", "#f4f4f6", "#ffd34d", ""],
+[3, "Nuvexa Nightrend", "sports", "#c9ccd6", "#ff4fa3", "w"],
+[3, "Zenthari Glasswing", "sports", "#ffd34d", "#111111", "w"],
+[3, "Vortivo Skyrender", "super", "#e6e8ee", "#2de2e6", ""],
+[3, "Astrelle Stormglass", "sports", "#121218", "#ff8a3d", "w"],
+[3, "Orvana Duskblade", "super", "#ff8a3d", "#111111", "s"],
+[3, "Lumora Prismrunner", "super", "#2f5bd1", "#ffffff", "s"],
+[3, "Nuvexa Ravenspire", "super", "#e6e8ee", "#2de2e6", ""],
+[3, "Zenthari Moonlance", "sports", "#1f4a3a", "#c9ccd6", ""],
+[3, "Vortivo Starforge", "sports", "#2de2e6", "#111111", ""],
+[3, "Astrelle Shardwing", "sports", "#f4f4f6", "#d8384a", "sw"],
+[3, "Orvana Voidskate", "muscle", "#d8384a", "#ffffff", "sw"],
+[3, "Lumora Thunderlace", "wedgetruck", "#b9bcc9", "#2de2e6", ""],
+[4, "Imperion Crownstrider", "super", "#e01e2e", "#ffd34d", "w"],
+[4, "Imperion Dragonsong", "super", "#ffd400", "#111111", ""],
+[4, "Imperion Celestia Rex", "super", "#5fe03a", "#111111", "w"],
+[4, "Imperion Starcrown", "hyper", "#ff7a1a", "#111111", "w"],
+[4, "Imperion Goldspire", "hyper", "#f4f4f6", "#2de2e6", "w"],
+[4, "Imperion Grand Paragon", "hyper", "#1d3a8a", "#2de2e6", ""],
+[5, "Magmaclaw Inferno", "hyper", "#c4101e", "#ffb000", "wfn"],
+[5, "Gridwraith", "super", "#14101e", "#ff4fa3", "wn"],
+[5, "Aurelion Sunking", "hyper", "#f2c14e", "#fff3b0", "xn"],
+[5, "Hoverbee Zeta-9", "sedan", "#f4f4f6", "#2de2e6", "hgn"],
+[5, "THE CREATOR", "tuner", "#c3c7d0", "#e01e2e", "wdlmn"],
+[0, "Brindle Jellybean", "hatch", "#f4f4f6", "#b8433a", ""],
+[0, "Wigglesby Cupcake", "hatch", "#5fe03a", "#7a3cff", ""],
+[0, "Pembrook Raisin", "truck", "#b8433a", "#1b1b22", ""],
+[0, "Mossgrove Walnut", "truck", "#e8c14f", "#d8b26a", ""],
+[0, "Noodleworth Peanut", "van", "#2f5bd1", "#e01e2e", ""],
+[0, "Puddleby Toffee", "hatch", "#5fe03a", "#f4f4f6", ""],
+[0, "Pottersly Sherbet", "van", "#e01e2e", "#ff8ad8", "k"],
+[0, "Fizzwick Truffle", "hatch", "#f4f4f6", "#4aa8ff", "k"],
+[0, "Crumbleton Fudge", "suv", "#c9ccd6", "#5d6577", "k"],
+[0, "Picklebury Cocoa", "hatch", "#7fd1c7", "#9a5cd6", ""],
+[0, "Tinkerly Mochi", "hatch", "#f4f4f6", "#ffd34d", ""],
+[0, "Bumblewick Ladle", "truck", "#ff4fa3", "#f4f4f6", "k"],
+[0, "Brindle Kettle", "sedan", "#c22a3a", "#e8c14f", ""],
+[0, "Wigglesby Teapot", "suv", "#e01e2e", "#e8c14f", ""],
+[0, "Pembrook Mitten", "suv", "#8a5a3a", "#1b1b22", ""],
+[0, "Mossgrove Slipper", "van", "#3a4a6b", "#b8433a", "k"],
+[0, "Noodleworth Pillow", "sedan", "#5fe03a", "#8a5a3a", ""],
+[0, "Puddleby Spoon", "sedan", "#6f9a4a", "#d8b26a", "k"],
+[0, "Pottersly Crayon", "truck", "#7a3cff", "#8a5a3a", ""],
+[0, "Fizzwick Eraser", "van", "#7fd1c7", "#b8433a", ""],
+[0, "Crumbleton Sticker", "truck", "#2f5bd1", "#2fb38a", ""],
+[0, "Picklebury Bubble", "hatch", "#7fd1c7", "#ff8ad8", ""],
+[0, "Tinkerly Puddle", "hatch", "#6f9a4a", "#1b1b22", "k"],
+[0, "Bumblewick Pinecone", "sedan", "#d8b26a", "#2f5bd1", ""],
+[0, "Brindle Acorn", "hatch", "#ff8ad8", "#8a5a3a", "k"],
+[0, "Wigglesby Clover", "hatch", "#b8433a", "#7a3cff", ""],
+[0, "Pembrook Daisy", "van", "#9a5cd6", "#ff4fa3", ""],
+[0, "Mossgrove Tulip", "sedan", "#c22a3a", "#7fd1c7", "k"],
+[0, "Noodleworth Mudpie", "sedan", "#5d6577", "#8a5a3a", ""],
+[0, "Puddleby Tadpole", "suv", "#7a3cff", "#e01e2e", ""],
+[0, "Pottersly Cricket", "sedan", "#c22a3a", "#6f9a4a", "k"],
+[0, "Fizzwick Ladybug", "sedan", "#7fd1c7", "#d8b26a", ""],
+[1, "Hollowpine Hollowlog", "truck", "#7a3cff", "#e8c14f", "g"],
+[1, "Granitecrest Grainwagon", "sports", "#7fd1c7", "#d8b26a", "g"],
+[1, "Rivermoor Hearthwagon", "van", "#9a5cd6", "#ff7a1a", "k"],
+[1, "Bramblecar Larchwood", "sedan", "#8a5a3a", "#5fe03a", "g"],
+[1, "Oxenfold Quillback", "suv", "#ff8ad8", "#7fd1c7", "k"],
+[1, "Stonewick Pebbleplow", "sports", "#2de2e6", "#8a5a3a", "g"],
+[1, "Quarryman Hedgeroamer", "suv", "#c22a3a", "#7a3cff", "g"],
+[1, "Trailmark Briarpatch", "sedan", "#5fe03a", "#2f5bd1", "g"],
+[1, "Hollowpine Mossmole", "truck", "#8a5a3a", "#e01e2e", ""],
+[1, "Granitecrest Burlapper", "suv", "#8a5a3a", "#6f9a4a", ""],
+[1, "Rivermoor Peatrunner", "suv", "#6f9a4a", "#4aa8ff", "s"],
+[1, "Bramblecar Glenhopper", "suv", "#6f9a4a", "#ff7a1a", ""],
+[1, "Oxenfold Mudruffle", "sedan", "#9a5cd6", "#c22a3a", "k"],
+[1, "Stonewick Furrowfin", "truck", "#e01e2e", "#c9ccd6", ""],
+[1, "Quarryman Stonehare", "van", "#d8b26a", "#e8c14f", "s"],
+[1, "Trailmark Copsewalker", "van", "#2f5bd1", "#7fd1c7", ""],
+[1, "Hollowpine Puddlehog", "truck", "#6f9a4a", "#e8c14f", ""],
+[1, "Granitecrest Barnstorm", "sedan", "#ffd34d", "#8a5a3a", "s"],
+[1, "Rivermoor Fernback", "truck", "#3a4a6b", "#ff4fa3", ""],
+[1, "Bramblecar Tumbleburr", "sports", "#5d6577", "#2fb38a", ""],
+[1, "Oxenfold Oakhauler", "truck", "#5d6577", "#e01e2e", ""],
+[1, "Stonewick Rainboot", "sports", "#ffd34d", "#ff7a1a", "k"],
+[1, "Quarryman Mossbuggy", "suv", "#c9ccd6", "#e01e2e", ""],
+[1, "Trailmark Hillcrawler", "van", "#d8b26a", "#f4f4f6", "k"],
+[1, "Hollowpine Dewdropper", "sports", "#f4f4f6", "#5fe03a", "g"],
+[2, "Velloria Zipfang", "sedan", "#3a4a6b", "#c22a3a", "w"],
+[2, "Hexwind Pulsefin", "sports", "#3a4a6b", "#7fd1c7", "w"],
+[2, "Quillon Turbotoad", "sedan", "#6f9a4a", "#f4f4f6", "sw"],
+[2, "Kestrava Flarekit", "tuner", "#2f5bd1", "#ff8ad8", "rw"],
+[2, "Skorra Nimblejet", "muscle", "#b8433a", "#5d6577", "s"],
+[2, "Dravik Stripeback", "sports", "#c22a3a", "#2de2e6", "s"],
+[2, "Razorline Gustwing", "truck", "#b8433a", "#ff7a1a", "sw"],
+[2, "Zorvek Sparrowshot", "truck", "#4aa8ff", "#7fd1c7", "rw"],
+[2, "Velloria Hotfoot", "truck", "#e01e2e", "#2de2e6", "rw"],
+[2, "Hexwind Slingtail", "tuner", "#4aa8ff", "#b8433a", "w"],
+[2, "Quillon Hurlwind", "sports", "#9a5cd6", "#2de2e6", "sw"],
+[2, "Kestrava Dartfang", "hatch", "#1b1b22", "#3a4a6b", "sw"],
+[2, "Skorra Kickflip", "muscle", "#5d6577", "#ff4fa3", "w"],
+[2, "Dravik Wheelspark", "hatch", "#2de2e6", "#ff4fa3", "sw"],
+[2, "Razorline Spinjack", "sedan", "#1b1b22", "#ff4fa3", "sw"],
+[2, "Zorvek Fizzrocket", "sports", "#f4f4f6", "#b8433a", "sw"],
+[2, "Velloria Tumblejet", "sedan", "#5fe03a", "#b8433a", ""],
+[2, "Hexwind Zoomkin", "hatch", "#5fe03a", "#2f5bd1", "w"],
+[2, "Quillon Flickfin", "muscle", "#ffd34d", "#d8b26a", "rw"],
+[2, "Kestrava Rallyroo", "hatch", "#1b1b22", "#3a4a6b", "rw"],
+[3, "Nuvexa Emberwake", "sports", "#e01e2e", "#5d6577", "sw"],
+[3, "Zenthari Frostlance", "muscle", "#b8433a", "#ff8ad8", "w"],
+[3, "Vortivo Glimmerclaw", "tuner", "#4aa8ff", "#5fe03a", "w"],
+[3, "Astrelle Hailstrike", "hyper", "#7a3cff", "#3a4a6b", "w"],
+[3, "Orvana Ironveil", "hyper", "#4aa8ff", "#6f9a4a", "n"],
+[3, "Lumora Silkstorm", "tuner", "#7a3cff", "#ff8ad8", "w"],
+[3, "Nuvexa Neonfang", "sports", "#5fe03a", "#ff4fa3", "w"],
+[3, "Zenthari Ashwhisper", "wedgetruck", "#2de2e6", "#5fe03a", "w"],
+[3, "Vortivo Gloomstrider", "muscle", "#e8c14f", "#2de2e6", "w"],
+[3, "Astrelle Lightcleaver", "tuner", "#f4f4f6", "#7a3cff", "w"],
+[3, "Orvana Riftrunner", "super", "#ff4fa3", "#c9ccd6", "sw"],
+[3, "Lumora Starsail", "muscle", "#7a3cff", "#ffd34d", "w"],
+[3, "Nuvexa Wraithwing", "wedgetruck", "#7a3cff", "#8a5a3a", "w"],
+[4, "Imperion Seraphwing", "super", "#5fe03a", "#7a3cff", "w"],
+[4, "Imperion Thronebreaker", "hyper", "#5fe03a", "#2fb38a", "n"],
+[4, "Imperion Sunforge", "hyper", "#8a5a3a", "#c22a3a", "w"],
+[4, "Imperion Zenith Regalia", "hyper", "#f4f4f6", "#c22a3a", "wn"],
+[4, "Imperion Majestrix", "sports", "#8a5a3a", "#1b1b22", "w"],
+[4, "Imperion Opaline Rex", "sports", "#c9ccd6", "#b8433a", "n"],
+[4, "Imperion Kingsflare", "hyper", "#ff4fa3", "#5d6577", "w"],
+[5, "Frostmaw", "super", "#e8f6ff", "#7fd7ff", "wn"],
+[5, "Starskimmer", "hyper", "#2a1458", "#c77dff", "wn"],
+[5, "Abyssal Lumen", "sports", "#4ad0de", "#e8fdff", "gn"]
+];
+CAR_LIST.forEach(([t,n,b,c,a,x]) => add(t,n,b,c,a,x));
+const SORTED = [...CHARS].sort((a, b) => a.tier - b.tier || a.id - b.id);
+const DISPLAY_NO = {}; SORTED.forEach((c, i) => DISPLAY_NO[c.id] = i + 1);
+const carNo = c => "#" + String(DISPLAY_NO[c.id]).padStart(3, "0");
+const isCreator = c => c.name === "THE CREATOR";
 const tierCounts = TIERS.map((_, i) => CHARS.filter(c => c.tier === i).length);
 
 function hexRGB(h){h=h.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
@@ -774,9 +973,9 @@ function renderHUD(){
   $("recLife").textContent = fmt(state.lifetimeCoins);
   $("recChests").textContent = fmt(state.chests);
   const c = curCar();
-  $("nowName").textContent = c.name;
+  $("nowName").textContent = c.name; $("nowName").classList.toggle("creator", isCreator(c));
   $("nowName").style.color = TIERS[c.tier].color;
-  $("nowPerk").textContent = TIERS[c.tier].name + (themeFor(c) ? " · " + themeFor(c).world : "");
+  $("nowPerk").textContent = TIERS[c.tier].name + (themeFor(c) ? " · " + themeFor(c).world : "") + " · ♪ " + Sound.genreName(c);
   $("chestBar").style.width = Math.min(100, state.coins) + "%";
   const can = state.coins >= 100 && !chestBusy;
   $("openChest").disabled = !can;
@@ -794,7 +993,7 @@ const cardCanvases = [];
 function renderCards(){
   const box = $("cards"); box.textContent = "";
   cardCanvases.length = 0;
-  CHARS.forEach(c => {
+  SORTED.forEach(c => {
     if (filter >= 0 && c.tier !== filter) return;
     const own = TEST.on || !!state.owned[c.id], t = TIERS[c.tier];
     const b = document.createElement("button"); b.type = "button";
@@ -802,8 +1001,8 @@ function renderCards(){
     b.style.setProperty("--rc", t.color);
     b.setAttribute("aria-label", own ? `${c.name}, ${t.name}${state.selected===c.id?", driving now":""}` : `Locked ${t.name} car`);
     const cv = document.createElement("canvas"); cv.width = 168; cv.height = 96;
-    const num = document.createElement("span"); num.className = "num"; num.textContent = "#" + String(c.id+1).padStart(3,"0");
-    const nm = document.createElement("span"); nm.className = "cn"; nm.textContent = own ? c.name : "???";
+    const num = document.createElement("span"); num.className = "num"; num.textContent = carNo(c);
+    const nm = document.createElement("span"); nm.className = "cn"; nm.textContent = own ? c.name : "???"; if (own && isCreator(c)) nm.classList.add("creator");
     const rr = document.createElement("span"); rr.className = "cr"; rr.textContent = t.name;
     b.append(num, cv, nm, rr);
     if (own && state.owned[c.id] > 1){ const n = document.createElement("span"); n.className="cnt"; n.textContent = "×" + state.owned[c.id]; b.append(n); }
@@ -947,100 +1146,228 @@ const Sound = (() => {
     coin(){ if (!ok()) return; tone(988, .07, {type:"square", vol:.12}); tone(1319, .16, {type:"square", vol:.12, at:.06}); },
     round(){ if (!ok()) return; [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, {type:"square", vol:.14, at:i*.08, cutoff:3000})); },
     crash(){ if (!ok()) return; noise(.5, {vol:.5, lp:1400}); tone(140, .45, {type:"sawtooth", vol:.3, slide:40, cutoff:900}); tone(70, .3, {type:"sine", vol:.4, slide:35}); },
-    shake(){ if (!ok()) return; for (let i = 0; i < 9; i++) noise(.05, {vol:.22, at:i*.14, hp:1800}); for (let i = 0; i < 9; i++) tone(180 + (i%2)*40, .06, {type:"square", vol:.06, at:i*.14 + .02, cutoff:800}); },
+    // chest suspense: rattles speed up; rarer pulls add a riser, a heartbeat and a drumroll
+    shake(dur, tier){ if (!ok()) return;
+      let t = 0, gap = .16; while (t < dur - .05){ noise(.05, {vol:.2 + tier*.02, at:t, hp:1800}); tone(170 + Math.random()*40, .05, {type:"square", vol:.05, at:t + .02, cutoff:800}); t += gap; gap = Math.max(.05, gap * (tier >= 3 ? .9 : .97)); }
+      if (tier >= 3){ const s2 = ac.createBufferSource(); s2.buffer = noiseBuf; s2.loop = true; const f = ac.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 4; const g = ac.createGain(), t0 = ac.currentTime;
+        f.frequency.setValueAtTime(300, t0); f.frequency.exponentialRampToValueAtTime(7000, t0 + dur); g.gain.setValueAtTime(.001, t0); g.gain.exponentialRampToValueAtTime(.2, t0 + dur); s2.connect(f); f.connect(g); g.connect(sfxBus); s2.start(t0); s2.stop(t0 + dur); }
+      if (tier >= 4) for (let k = 0; k < dur/.6; k++){ tone(70, .2, {type:"sine", vol:.5, at:k*.6, slide:45}); tone(70, .18, {type:"sine", vol:.35, at:k*.6 + .2, slide:45}); }
+      if (tier >= 5) for (let k = 0; k < 28; k++) noise(.05, {vol:.08 + k*.006, at: dur - 1.1 + k*.04, hp:1500});
+    },
     reveal(tier){ if (!ok()) return;
-      noise(.35, {vol:.25, hp:3000});
-      const notes = [[523,659,784],[523,659,784,1047],[587,740,880,1175],[659,831,988,1319],[523,659,784,1047,1319,1568],[523,659,784,1047,1319,1568,2093]][tier] || [523,659,784];
-      notes.forEach((f, i) => tone(f, .5 + (tier >= 4 ? .4 : 0), {type: tier >= 3 ? "sawtooth" : "square", vol:.11, at:.08 + i*.09, cutoff: 2600 + tier*500}));
-      if (tier >= 4) for (let i = 0; i < 10; i++) tone(1800 + Math.random()*1600, .12, {type:"sine", vol:.06, at:.6 + i*.07});
+      const T = (f, d, o) => tone(f, d, o);
+      if (tier === 0){ T(784, .25, {type:"triangle", vol:.14}); T(1047, .35, {type:"triangle", vol:.12, at:.09}); return; }
+      if (tier === 1){ [659,784,1047].forEach((f,i) => T(f, .4, {type:"triangle", vol:.13, at:i*.08})); noise(.2, {vol:.08, hp:6000}); return; }
+      if (tier === 2){ [523,659,784,1047,1319].forEach((f,i) => T(f, .45, {type:"square", vol:.08, at:i*.07, cutoff:3200})); for (let i = 0; i < 6; i++) T(2000 + i*250, .12, {type:"sine", vol:.05, at:.35 + i*.05}); noise(.3, {vol:.12, hp:5000}); return; }
+      noise(1.2, {vol:.22 + tier*.04, hp:4500});                         // cymbal crash
+      if (tier >= 4){ T(55, 1.4, {type:"sine", vol:.7, slide:30}); noise(.25, {vol:.4, lp:900}); }
+      const chordA = tier === 3 ? [523,659,784] : [392,523,659,784], chordB = tier === 3 ? [587,740,880,1175] : [523,659,784,1047,1319];
+      chordA.forEach(f => [-10,10].forEach(d => T(f * (1 + d/1200), .5, {type:"sawtooth", vol:.06, cutoff:2400})));
+      chordB.forEach(f => [-10,10].forEach(d => T(f * (1 + d/1200), tier >= 4 ? 1.6 : 1.0, {type:"sawtooth", vol:.06, at:.42, cutoff:3200 + tier*400, attack:.03})));
+      if (tier >= 4) [0,.14,.28,.42].forEach((d,i) => T(i < 3 ? 98 : 131, .35, {type:"sine", vol:.45, at:d, slide:60}));   // timpani
+      const sp = tier === 3 ? 8 : (tier === 4 ? 16 : 30);
+      for (let i = 0; i < sp; i++) T(1600 + Math.random()*2400, .14, {type:"sine", vol:.05, at:.5 + i*.06});
+      if (tier >= 5){ [1047,1319,1568,2093].forEach((f,i) => T(f, 1.8, {type:"triangle", vol:.07, at:1.0 + i*.12})); T(41, 2, {type:"sine", vol:.6, at:.0, slide:28}); }
     },
     click(){ if (!ok()) return; tone(660, .05, {type:"square", vol:.07}); },
   };
 
-  /* ---- music: one looping track for the city, plus one for each Mythic world ---- */
-  const SONGS = {
-    "Miami Nights":       { bpm:104, chords:[[57,60,64],[53,57,60],[48,52,55],[55,59,62]], lead:[69,72,76,72, 69,72,76,79, 77,76,72,69, 72,71,67,64],
-                            bass:"sawtooth", bassCut:700, arp:"square", arpEvery:2, leadType:"triangle", kick:[0,4,8,12], snare:[4,12], hat:2, padVol:.035 },
-    "Volcano Night":      { bpm:92,  chords:[[52,55,59],[53,57,60],[52,55,59],[50,53,57]], lead:[64,65,64,62, 64,67,65,64, 62,60,62,64, 59,60,62,64],
-                            bass:"sawtooth", bassCut:420, arp:"sawtooth", arpEvery:4, leadType:"sawtooth", kick:[0,3,8,11], snare:[4,12], hat:4, padVol:.045, tom:true },
-    "Synthwave Grid":     { bpm:112, chords:[[53,56,60],[49,53,56],[56,60,63],[51,55,58]], lead:[72,75,77,80, 77,75,72,68, 70,72,75,72, 70,68,67,68],
-                            bass:"sawtooth", bassCut:900, arp:"square", arpEvery:1, leadType:"square", kick:[0,4,8,12], snare:[4,12], hat:2, padVol:.04 },
-    "Golden Hour":        { bpm:92,  chords:[[48,52,55,59],[45,48,52,55],[41,45,48,52],[43,47,50,53]], lead:[76,74,72,71, 72,69,67,69, 72,74,76,79, 77,76,74,72],
-                            bass:"triangle", bassCut:600, arp:"triangle", arpEvery:2, leadType:"sine", kick:[0,10], snare:[4,12], hat:4, padVol:.04, soft:true },
-    "Neo City 2099":      { bpm:120, chords:[[50,53,57],[46,50,53],[48,52,55],[45,48,52]], lead:[74,77,81,77, 74,72,74,77, 76,72,69,72, 76,77,76,72],
-                            bass:"square", bassCut:800, arp:"square", arpEvery:1, leadType:"square", kick:[0,4,8,12], snare:[4,12], hat:1, padVol:.03, octArp:true },
-    "Night Race Circuit": { bpm:128, chords:[[52,59,64],[48,55,60],[55,62,67],[50,57,62]], lead:[76,79,76,74, 72,74,76,79, 81,79,76,74, 76,74,71,74],
-                            bass:"sawtooth", bassCut:1000, arp:"sawtooth", arpEvery:2, leadType:"sawtooth", kick:[0,4,8,12], snare:[4,12], hat:2, padVol:.03, offHat:true, bass16:true },
-  };
+  /* ==== MUSIC ENGINE: fast electronic tracks in six genres. Every car gets its own song. ====
+     Rounds act like a song's structure: 1 intro, 2 build, 3 the DROP, 4-5 extra layers + faster. */
+  let pump = null;                                  // sidechain "pump" bus: ducks on every kick
+  function pumpBus(){ if (!pump){ pump = ac.createGain(); pump.gain.value = 1; pump.connect(musicBus); } return pump; }
   const hz = m => 440 * Math.pow(2, (m - 69)/12);
+  const B = () => musicBus;
 
-  /* every regular car gets its own song, generated from the car itself (same car -> same song) */
-  const genCache = {};
-  function songForCar(c){
-    const th = themeFor(c); if (th && SONGS[th.world]) return SONGS[th.world];
-    if (genCache[c.id]) return genCache[c.id];
-    let a = (c.id + 1) * 2654435761 >>> 0;
-    const R = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-    const pick = arr => arr[Math.floor(R()*arr.length)];
-    const minor = R() < .65;
-    const scale = minor ? [0,2,3,5,7,8,10] : [0,2,4,5,7,9,11];
-    const root = 45 + Math.floor(R()*8);                         // A2 .. E3
-    const prog = pick(minor ? [[0,5,2,6],[0,3,4,0],[0,6,5,6],[0,2,5,4],[0,5,3,4]] : [[0,4,5,3],[0,5,3,4],[0,3,0,4],[5,3,0,4],[0,4,3,4]]);
-    const note = d => root + 12 + scale[d % 7] + 12*Math.floor(d / 7);
-    const chords = prog.map(d => [note(d), note(d+2), note(d+4)]);
-    const bpmBase = [98,102,106,110,116][Math.min(4, c.tier)];
-    let deg = pick([0,2,4]); const lead = [];
-    for (let i = 0; i < 16; i++){ lead.push(root + 24 + scale[((deg % 7) + 7) % 7] + 12*Math.floor(deg / 7)); deg += pick([-2,-1,-1,1,1,2,0,3]); deg = Math.max(-2, Math.min(9, deg)); }
-    const song = {
-      bpm: bpmBase + Math.floor(R()*12), chords, lead,
-      bass: pick(["sawtooth","sawtooth","square","triangle"]), bassCut: 500 + Math.floor(R()*500),
-      arp: pick(["square","triangle","sawtooth"]), arpEvery: pick([1,2,2]), leadType: pick(["triangle","square","sawtooth","sine"]),
-      kick: pick([[0,4,8,12],[0,4,8,12],[0,6,8,14],[0,3,8,11],[0,8,10]]), snare: pick([[4,12],[4,12],[4,12,14]]),
-      hat: pick([2,2,4]), padVol: .03 + R()*.015, octArp: R() < .3, offHat: R() < .3,
-    };
-    return genCache[c.id] = song;
+  // ---- instruments ----
+  function kick(at, kind){
+    const t = ac.currentTime + at;
+    if (kind === "chip"){ tone(160, .12, {type:"square", vol:.42, at, slide:45, bus:B(), cutoff:1200}); }
+    else if (kind === "808"){ tone(65, .9, {type:"sine", vol:.6, at, slide:42, bus:B()}); tone(140, .06, {type:"triangle", vol:.25, at, slide:60, bus:B()}); }
+    else { tone(150, .28, {type:"sine", vol:.7, at, slide:42, bus:B()}); noise(.02, {vol:.25, at, hp:3000, bus:B()}); }
+    if (pump){ pump.gain.cancelScheduledValues(t); pump.gain.setValueAtTime(.25, t); pump.gain.linearRampToValueAtTime(1, t + STEP*3); }
+  }
+  function snare(at, kind){
+    if (kind === "chip"){ noise(.09, {vol:.32, at, hp:2000, bus:B()}); return; }
+    if (kind === "clap"){ [0, .012, .024].forEach(d => noise(.12, {vol:.2, at: at + d, hp:1200, lp:6000, bus:B()})); return; }
+    noise(.2, {vol:.3, at, hp:1200, bus:B()}); tone(200, .1, {type:"triangle", vol:.2, at, slide:150, bus:B()});
+  }
+  function hat(at, open, vol){ noise(open ? .14 : .035, {vol: vol || (open ? .08 : .06), at, hp:8000, bus:B()}); }
+  function crash(at){ noise(1.4, {vol:.18, at, hp:5000, bus:B()}); }
+  function riser(at, dur){
+    const t = ac.currentTime + at, s = ac.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    const f = ac.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 3; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(9000, t + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(.001, t); g.gain.exponentialRampToValueAtTime(.16, t + dur);
+    s.connect(f); f.connect(g); g.connect(B()); s.start(t); s.stop(t + dur + .02);
+  }
+  function impact(at){ tone(55, 1.2, {type:"sine", vol:.6, at, slide:30, bus:B()}); crash(at); }
+  // a stack of detuned saws (the classic big EDM lead / chord sound)
+  function supersaw(notes, at, dur, vol, cutoff, toPump, attack){
+    const t = ac.currentTime + at, out = ac.createGain(), f = ac.createBiquadFilter();
+    f.type = "lowpass"; f.frequency.value = cutoff || 3000; f.connect(out);
+    out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(vol, t + (attack || .01)); out.gain.setValueAtTime(vol, t + dur*.7); out.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    out.connect(toPump ? pumpBus() : B());
+    notes.forEach(n => [-14, 0, 14].forEach(cents => { const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(n); o.detune.value = cents; o.connect(f); o.start(t); o.stop(t + dur + .03); }));
+    return out;
+  }
+  function pluck(n, at, dur, vol, type){
+    const t = ac.currentTime + at, o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = type || "sawtooth"; o.frequency.value = hz(n); f.type = "lowpass"; f.Q.value = 4;
+    f.frequency.setValueAtTime(5000, t); f.frequency.exponentialRampToValueAtTime(400, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    o.connect(f); f.connect(g); g.connect(B()); o.start(t); o.stop(t + dur + .02); return g;
+  }
+  function wobble(n, at, dur, rate, vol){
+    const t = ac.currentTime + at, f = ac.createBiquadFilter(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain();
+    f.type = "lowpass"; f.Q.value = 9; f.frequency.value = 500; lfo.type = "sine"; lfo.frequency.value = rate; lg.gain.value = 1100;
+    lfo.connect(lg); lg.connect(f.frequency);
+    [["sawtooth",0],["square",-1200],["sawtooth",8]].forEach(([ty,det]) => { const o = ac.createOscillator(); o.type = ty; o.frequency.value = hz(n); o.detune.value = det; o.connect(f); o.start(t); o.stop(t + dur + .02); });
+    g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur*.9); g.gain.linearRampToValueAtTime(.0008, t + dur);
+    f.connect(g); g.connect(B()); lfo.start(t); lfo.stop(t + dur + .02);
+  }
+  function reese(n, at, dur, vol){
+    const t = ac.currentTime + at, f = ac.createBiquadFilter(), g = ac.createGain();
+    f.type = "lowpass"; f.frequency.value = 520; f.Q.value = 2;
+    [-18, 18].forEach(c => { const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(n); o.detune.value = c; o.connect(f); o.start(t); o.stop(t + dur + .02); });
+    tone(hz(n - 12), dur, {type:"sine", vol: vol*.9, at, bus:B()});
+    g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur*.85); g.gain.linearRampToValueAtTime(.0008, t + dur);
+    f.connect(g); g.connect(pumpBus());
+  }
+  function bass808(n, at, dur, slideFrom){ tone(hz(slideFrom || n), dur, {type:"sine", vol:.55, at, slide: hz(n), bus:pumpBus()}); tone(hz(n + 12), dur*.5, {type:"triangle", vol:.08, at, bus:pumpBus()}); }
+  function leadNote(S, n, at, dur){
+    const L = S.lead;
+    if (L.kind === "supersaw") supersaw([n], at, dur, .07, L.cutoff, false);
+    else if (L.kind === "pluck") pluck(n, at, Math.max(dur, .18), .1, L.wave);
+    else { const g = tone(hz(n), dur, {type:L.wave, vol: L.wave === "square" ? .07 : .1, at, cutoff:L.cutoff, bus:B()}); if (g && L.echo) g.connect(delay); }
   }
 
-  // intensity rises with the round: 0 = drums, bass, pads ... 4 = everything, brighter and busier
-  let song = SONGS["Miami Nights"], baseBpm = song.bpm, STEP = 60 / baseBpm / 4, lvl = 0;
-  let playing = false, step = 0, nextT = 0, timer = null;
+  // ---- genres: each decides what plays on each 16th-note step ----
+  const GENRES = {
+    electro: { name:"Electro House", bpm:[126,130], step(S, b, s, at, lvl){
+      const ch = S.chords[b];
+      kick(at); if (s === 4 || s === 12) snare(at, "clap");
+      if (s % 4 === 2) hat(at, true);
+      if (lvl >= 3 && s % 2 === 1) hat(at, false, .04);
+      if (s === 0) supersaw(ch, at, STEP*15, lvl >= 2 ? .05 : .035, lvl >= 2 ? 4200 : 1600, true, .02);
+      if (lvl >= 1 && s % 4 === 2) tone(hz(ch[0] - 24), STEP*1.6, {type:"sawtooth", vol:.2, at, cutoff:900, bus:pumpBus()});
+      if (lvl >= 3 && s % 2 === 1){ const g = pluck(ch[(s>>1)%3] + 24, at, STEP*1.2, .05, "square"); if (g) g.connect(delay); }
+    }, beat(s){ return s % 4 === 0; } },
+    dubstep: { name:"Dubstep", bpm:[138,145], step(S, b, s, at, lvl){
+      const ch = S.chords[b];
+      if (s === 0 || (lvl >= 2 && s === 10) || (lvl >= 3 && s === 3)) kick(at);
+      if (s === 8) snare(at); if (lvl >= 3 && s === 15) snare(at, "clap");
+      if (s % 2 === 0) hat(at, false, .05); if (lvl >= 3 && s % 2 === 1) hat(at, false, .03);
+      if (lvl < 2 && s === 0) supersaw(ch, at, STEP*16, .03, 1200, false, .4);
+      if (lvl >= 1 && lvl < 2 && s === 0) tone(hz(ch[0] - 24), STEP*16, {type:"sine", vol:.3, at, bus:B()});
+      if (lvl >= 2 && (s === 0 || s === 8)){ const rates = S.wob[(b*2 + (s ? 1 : 0)) % S.wob.length]; wobble(ch[0] - 24, at, STEP*8, rates * S.bpm / 60 / 2, .2); }
+    } },
+    dnb: { name:"Drum & Bass", bpm:[170,176], step(S, b, s, at, lvl){
+      const ch = S.chords[b];
+      if (s === 0 || s === 10 || (lvl >= 3 && s === 6)) kick(at);
+      if (s === 4 || s === 12) snare(at); if (lvl >= 2 && (s === 7 || s === 14)) noise(.08, {vol:.07, at, hp:1500, bus:B()});
+      hat(at, false, s % 2 ? .035 : .055); if (lvl >= 1 && s % 8 === 6) hat(at, true);
+      if (s === 0) supersaw(ch, at, STEP*16, .028, 1400, false, .3);
+      if (lvl >= 1 && (s === 0 || s === 10)) reese(ch[0] - 24 + (s === 10 && b % 2 ? 7 : 0), at, STEP*(s === 0 ? 9 : 5), .16);
+      if (lvl >= 3 && s % 4 === 2){ const g = pluck(ch[(s>>2)%3] + 24, at, STEP*2, .05, "triangle"); if (g) g.connect(delay); }
+    } },
+    chip: { name:"Chiptune", bpm:[148,158], step(S, b, s, at, lvl){
+      const ch = S.chords[b];
+      if (s % 8 === 0 || (lvl >= 3 && s === 12)) kick(at, "chip");
+      if (s === 4 || s === 12) snare(at, "chip");
+      if (s % 2 === 0) noise(.02, {vol:.05, at, hp:9000, bus:B()});
+      // signature fast arpeggio, octave-jumping
+      const arp = [ch[0], ch[1], ch[2], ch[0]+12][s % 4] + 12 + (lvl >= 4 && s % 8 >= 4 ? 12 : 0);
+      tone(hz(arp), STEP*.9, {type:"square", vol: lvl >= 2 ? .06 : .085, at, cutoff:3500, bus:B()});
+      if (lvl >= 1 && s % 2 === 0) tone(hz(ch[0] - 12 + (s % 4 === 2 ? 12 : 0)), STEP*1.7, {type:"triangle", vol:.36, at, bus:B()});
+    } },
+    trance: { name:"Trance", bpm:[136,140], step(S, b, s, at, lvl){
+      const ch = S.chords[b];
+      kick(at); if (lvl >= 1 && (s === 4 || s === 12)) snare(at, "clap");
+      if (s % 4 === 2) hat(at, true, .07); if (lvl >= 3) hat(at, false, .025);
+      if (lvl >= 1 && s % 4 !== 0) tone(hz(ch[0] - 24 + (s % 4 === 3 ? 12 : 0)), STEP*.9, {type:"sawtooth", vol:.17, at, cutoff:800, bus:pumpBus()});
+      if (lvl >= 2){ if (s % 2 === 0 && (S.gate >> (s/2)) & 1) supersaw(ch.map(n => n + 12), at, STEP*1.6, .035, 3500, false); }
+      else if (s === 0) supersaw(ch, at, STEP*16, .03, 1500, true, .3);
+      if (lvl >= 3 && s % 2 === 1){ const g = pluck(ch[(s>>1)%3] + 24, at, STEP*1.3, .04, "sawtooth"); if (g) g.connect(delay); }
+    } },
+    future: { name:"Future Bass", bpm:[146,154], step(S, b, s, at, lvl){
+      const ch = S.chords[b];
+      if (s === 0 || (lvl >= 1 && s === 11)) kick(at, "808");
+      if (s === 8) snare(at, "clap");
+      if (lvl >= 1){ if (s % 2 === 0) hat(at, false, .05); if (b % 2 === 1 && s >= 12){ hat(at, false, .04); hat(at + STEP/2, false, .035); } }
+      if (lvl >= 1 && (s === 0 || s === 11)) bass808(ch[0] - 24, at, STEP*(s === 0 ? 10 : 5), s === 11 ? ch[0] - 19 : 0);
+      if (lvl < 2 && s === 0) supersaw(ch.map(n => n + 12), at, STEP*16, .03, 1800, false, .25);
+      if (lvl >= 2 && S.chops.includes(s)) supersaw(ch.map(n => n + 12), at, STEP*1.8, .05, 3800, true, .05);
+      if (lvl >= 3 && s % 4 === 3) tone(hz(ch[2] + 24), STEP, {type:"sine", vol:.06, at, slide: hz(ch[2] + 26), bus:B()});
+    } },
+  };
+  const GENRE_KEYS = Object.keys(GENRES);
+
+  // ---- per-car song: genre + key + tempo + sound + catchy hook ----
+  const PROGS = { minor: [[0,5,2,6],[0,6,5,6],[5,6,0,0],[0,3,5,4],[0,5,3,4],[0,2,5,6]], major: [[0,4,5,3],[5,3,0,4],[0,3,4,4],[3,4,5,5]] };
+  const RHYTHMS = ["x.x.x..x.x.x..x.","x..x..x.x..x..x.","x.xxx.x.x.xxx.x.","x...x.x.x...x.x.","xx.x.xx.xx.x.xx.","x..x..x...x.x.x.","x.x.x.x.xxx.x...","x..x.x..x..x.x.x"];
+  const MYTHIC_SONGS = {   // fixed picks so each Mythic's song is hand-chosen
+    "Volcano Night": { genre:"dubstep", root:52, minor:true, seed:11 },
+    "Synthwave Grid": { genre:"electro", root:53, minor:true, seed:23 },
+    "Golden Hour": { genre:"future", root:48, minor:false, seed:37 },
+    "Neo City 2099": { genre:"chip", root:50, minor:true, seed:41 },
+    "Night Race Circuit": { genre:"dnb", root:52, minor:true, seed:59 },
+    "Frozen Tundra": { genre:"trance", root:50, minor:true, seed:71 },
+    "Space Highway": { genre:"electro", root:47, minor:true, seed:83 },
+    "Deep Sea": { genre:"future", root:45, minor:true, seed:97 },
+  };
+  const genCache = {};
+  function songForCar(c){
+    if (genCache[c.id]) return genCache[c.id];
+    const th = themeFor(c), fixed = th ? MYTHIC_SONGS[th.world] : null;
+    let a = ((fixed ? fixed.seed : c.id + 101) * 2654435761) >>> 0;
+    const R = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const pick = arr => arr[Math.floor(R()*arr.length)];
+    const genre = fixed ? fixed.genre : GENRE_KEYS[(c.id * 7 + Math.floor(c.id / 6)) % GENRE_KEYS.length];
+    const minor = fixed ? fixed.minor : R() < .75;
+    const scale = minor ? [0,2,3,5,7,8,10] : [0,2,4,5,7,9,11];
+    const root = fixed ? fixed.root : 45 + Math.floor(R()*9);
+    const prog = pick(PROGS[minor ? "minor" : "major"]);
+    const note = d => root + 12 + scale[((d % 7) + 7) % 7] + 12*Math.floor(d / 7);
+    const chords = prog.map(d => [note(d), note(d+2), note(d+4)]);
+    const [lo, hi] = GENRES[genre].bpm;
+    // hook: one rhythm + a contour over chord tones, repeated A A A B so it sticks
+    const rhyA = pick(RHYTHMS), rhyB = pick(RHYTHMS), contour = Array.from({length:16}, () => pick([0,1,2,3,2,1,4]));
+    const octave = genre === "chip" ? 24 : 12;
+    const bars = [0,1,2,3].map(b => { const rhy = b === 3 ? rhyB : rhyA; let k = 0;
+      return [...rhy].map((ch, i) => { if (ch !== "x") return null; const ci = (b === 3 ? 4 - contour[k] : contour[k]) ; k++;
+        const tones = chords[b]; return tones[ci % 3] + octave + 12*Math.floor(ci / 3); }); });
+    const lead = genre === "chip" ? {kind:"tone", wave:"square", cutoff:4000, echo:true}
+      : pick([{kind:"supersaw", cutoff:4500}, {kind:"pluck", wave:"sawtooth"}, {kind:"tone", wave:"square", cutoff:3000, echo:true}, {kind:"pluck", wave:"square"}, {kind:"supersaw", cutoff:3000}]);
+    const song = { genre, bpm: lo + Math.floor(R()*(hi - lo + 1)), chords, bars, lead,
+      wob: [pick([2,4,4,8]), pick([4,8,3,6]), pick([2,8,4]), pick([6,8,12])], gate: pick([0b11011011, 0b10111011, 0b11101110, 0b10110111]),
+      chops: pick([[0,3,6,10,12],[0,3,6,8,11,14],[0,2,6,10,13],[0,4,6,10,12,14]]) };
+    return genCache[c.id] = song;
+  }
+  function genreName(c){ return GENRES[songForCar(c).genre].name; }
+
+  let song = null, STEP = .12, lvl = 0, playing = false, step = 0, nextT = 0, timer = null, pendingImpact = false;
   function schedule(){
     while (nextT < ac.currentTime + .15){
-      const S = song, bar = Math.floor(step / 16) % 4, s = step % 16, ch = S.chords[bar], at = nextT - ac.currentTime, B = musicBus;
-      const bright = 1 + Math.max(0, lvl - 3) * .4;
-      // drums
-      if (S.kick.includes(s)) tone(110, .22, {type:"sine", vol: S.soft ? .38 : .55, at, slide:40, bus:B});
-      if (S.snare.includes(s)){ noise(S.soft ? .12 : .18, {vol: S.soft ? .12 : .22, at, hp: S.soft ? 2500 : 1500, bus:B}); tone(190, .1, {type:"triangle", vol:.12, at, bus:B}); }
-      if (S.tom && (s === 14 || s === 15)) tone(s === 14 ? 140 : 105, .2, {type:"sine", vol:.35, at, slide:70, bus:B});
-      const hatEvery = lvl >= 3 ? 1 : (lvl >= 1 ? S.hat : 4);
-      if (s % hatEvery === 0) noise(.04, {vol: S.soft ? .03 : (s % 4 === 2 ? .09 : .05), at, hp:7000, bus:B});
-      if (S.offHat && lvl >= 1 && s % 4 === 2) noise(.08, {vol:.07, at, hp:6000, bus:B});
-      // bass (busier from round 4)
-      const bassStep = (S.bass16 || lvl >= 3) ? 1 : 2;
-      if (s % bassStep === 0){ const root = ch[0] - 24 + (bassStep === 2 && s % 4 === 2 ? 12 : 0); tone(hz(root), STEP*(bassStep*.9), {type:S.bass, vol: S.soft ? .14 : .16, at, cutoff:S.bassCut*bright, bus:B}); }
-      // pad at the start of each bar
-      if (s === 0) ch.forEach(n => [-.06, .06].forEach(det => tone(hz(n) * (1 + det/100), STEP*16, {type: S.soft ? "triangle" : "sawtooth", vol:S.padVol, at, attack:.4, cutoff:1300*bright, bus:B})));
-      // arpeggio from round 2
-      if (lvl >= 1 && s % S.arpEvery === (S.arpEvery > 1 ? 1 : 0)){
-        const idx = Math.floor(s / S.arpEvery) % ch.length; const n = ch[idx] + 12 + (S.octArp && (s >> 2) % 2 ? 12 : 0);
-        const g = tone(hz(n), STEP*1.3, {type:S.arp, vol: S.arpEvery === 1 ? .035 : .05, at, cutoff:2500*bright, bus:B}); if (g) g.connect(delay);
-      }
-      // lead melody from round 3 (every loop from round 3, doubled an octave up from round 5)
-      if (lvl >= 2 && s % 4 === 0){
-        const n = S.lead[(bar*4 + s/4) % 16], lv = S.leadType === "sawtooth" ? .06 : .09;
-        tone(hz(n), STEP*3.5, {type:S.leadType, vol:lv, at, cutoff:3000*bright, bus:B});
-        if (lvl >= 4) tone(hz(n + 12), STEP*3, {type:"triangle", vol:lv*.45, at, cutoff:4000, bus:B});
-      }
+      const S = song, b = Math.floor(step / 16) % 4, s = step % 16, at = Math.max(0, nextT - ac.currentTime);
+      if (pendingImpact && s === 0){ impact(at); pendingImpact = false; }
+      GENRES[S.genre].step(S, b, s, at, lvl);
+      // the hook comes in at the drop (round 3), doubled an octave up from round 5
+      if (lvl >= 2){ const n = S.bars[b][s]; if (n){ leadNote(S, n, at, STEP*1.8); if (lvl >= 4) pluck(n + 12, at, STEP*1.5, .035, "triangle"); } }
+      // a riser in the last bar before the drop
+      if (lvl === 1 && b === 3 && s === 0) riser(at, STEP*16);
       step++; nextT += STEP;
     }
   }
-  function setRound(r){ lvl = Math.max(0, Math.min(4, r - 1)); STEP = 60 / (baseBpm + Math.min(24, (r - 1)*4)) / 4; }
-  function pickSong(sg){ song = sg; baseBpm = sg.bpm; setRound(1); }
+  function setRound(r){
+    const old = lvl; lvl = Math.max(0, Math.min(4, r - 1));
+    if (song) STEP = 60 / (song.bpm + Math.min(12, (r - 1)*3)) / 4;
+    if (lvl === 2 && old === 1) pendingImpact = true;
+  }
   function musicTarget(){ return prefs.music && playing ? MUSIC_VOL : 0; }
   function fadeMusic(to, secs){ if (!ac) return; const t = ac.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setValueAtTime(musicBus.gain.value, t); musicBus.gain.linearRampToValueAtTime(to, t + secs); }
   function musicStart(car){
     if (!wake()) return;
-    const sg = songForCar(car); if (sg !== song){ pickSong(sg); step = 0; } setRound(1);
+    const sg = songForCar(car); if (sg !== song){ song = sg; step = 0; } pendingImpact = false; setRound(1);
     if (!playing){ playing = true; step = 0; nextT = ac.currentTime + .08; clearInterval(timer); timer = setInterval(schedule, 25); }
     fadeMusic(musicTarget(), .6);
   }
@@ -1056,7 +1383,7 @@ const Sound = (() => {
   // first touch or key anywhere unlocks audio (iPhone needs this)
   const unlock = () => wake();
   ["pointerdown","touchend","keydown"].forEach(ev => document.addEventListener(ev, unlock, {passive:true}));
-  return Object.assign(fx, { prefs, wake, musicStart, musicStop, duck, setMusic, setSfx, setRound });
+  return Object.assign(fx, { prefs, wake, musicStart, musicStop, duck, setMusic, setSfx, setRound, genreName });
 })();
 function renderSoundButtons(){
   document.querySelectorAll("[data-snd]").forEach(b => {
@@ -1096,10 +1423,38 @@ function rollChar(){
 }
 const cfChestCtx = setupCanvas($("cfChest")), cfCharCtx = setupCanvas($("cfChar"));
 let cfOpen = false, cfRevealed = false;
+// how dramatic each rarity's opening is
+const CHEST_FX = [
+  {dur:1.0, rayop:0,   rayspd:18, glow:0,  flash:0,   conf:0,   coins:0,  hints:[]},
+  {dur:1.2, rayop:.14, rayspd:20, glow:8,  flash:0,   conf:22,  coins:0,  hints:[]},
+  {dur:1.5, rayop:.2,  rayspd:15, glow:12, flash:.35, conf:50,  coins:0,  hints:[[.6,"Something's glowing…"]]},
+  {dur:1.9, rayop:.28, rayspd:10, glow:18, flash:.6,  conf:100, coins:0,  hints:[[.4,"Something's glowing…"],[.75,"It's getting stronger!"]]},
+  {dur:2.4, rayop:.34, rayspd:7,  glow:26, flash:.85, conf:160, coins:40, hints:[[.3,"Something's glowing…"],[.6,"It's getting stronger!"],[.85,"Here it comes…"]]},
+  {dur:3.2, rayop:.42, rayspd:4,  glow:34, flash:1,   conf:260, coins:70, hints:[[.25,"Something's glowing…"],[.5,"The ground is shaking…"],[.75,"This is no ordinary chest…"],[.92,"!!!"]]},
+];
+const cfFx = $("cfFx"), cfFxCtx = cfFx.getContext("2d");
+let cfParts = [], cfTimers = [];
+function cfSize(){ const d = Math.min(devicePixelRatio || 1, 2); cfFx.width = innerWidth * d; cfFx.height = innerHeight * d; cfFxCtx.setTransform(d,0,0,d,0,0); }
+function cfBurst(tier){
+  const fx = CHEST_FX[tier], r = $("cfChest").getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height*.45;
+  const cols = [["#ffffff"],["#6fd36a","#c8f5c0","#ffffff"],["#4aa8ff","#bfe2ff","#ffffff"],["#b77bff","#ff8ad8","#ffffff"],["#ffb23f","#ffd34d","#fff3b0","#ffffff"],["#ff4f6b","#ffd34d","#5fe03a","#2de2e6","#b77bff","#ffffff"]][tier];
+  for (let i = 0; i < fx.conf; i++){ const a = Math.random()*Math.PI*2, sp = 200 + Math.random()*(300 + tier*120);
+    cfParts.push({k:"c", x:cx, y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 200, r:Math.random()*6, vr:(Math.random()-.5)*12, w:5 + Math.random()*5, h:3 + Math.random()*4, col:cols[i % cols.length], life:2.4 + Math.random()*1.2}); }
+  for (let i = 0; i < fx.coins; i++) cfParts.push({k:"o", x:Math.random()*innerWidth, y:-20 - Math.random()*innerHeight*.8, vx:(Math.random()-.5)*40, vy:120 + Math.random()*160, r:0, vr:4 + Math.random()*6, life:5});
+}
+function cfDraw(dt){
+  const W = innerWidth, H = innerHeight; cfFxCtx.clearRect(0, 0, W, H);
+  cfParts.forEach(p => { p.life -= dt; p.vy += (p.k === "o" ? 160 : 520)*dt; p.vx *= .99; p.x += p.vx*dt; p.y += p.vy*dt; p.r += p.vr*dt;
+    cfFxCtx.save(); cfFxCtx.globalAlpha = Math.min(1, p.life); cfFxCtx.translate(p.x, p.y);
+    if (p.k === "o"){ const w = Math.abs(Math.cos(p.r))*8 + 1; cfFxCtx.fillStyle = "#a8701c"; cfFxCtx.beginPath(); cfFxCtx.ellipse(0,0,w+1,9,0,0,Math.PI*2); cfFxCtx.fill(); cfFxCtx.fillStyle = "#ffd34d"; cfFxCtx.beginPath(); cfFxCtx.ellipse(0,0,w,8,0,0,Math.PI*2); cfFxCtx.fill(); }
+    else { cfFxCtx.rotate(p.r); cfFxCtx.fillStyle = p.col; cfFxCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h * Math.abs(Math.cos(p.r*1.3)) + 1); }
+    cfFxCtx.restore(); });
+  cfParts = cfParts.filter(p => p.life > 0 && p.y < H + 40);
+}
 function openChest(){
   if (TEST.on){ toast("Chests are paused in Test Drive mode"); return; }
   if (chestBusy || state.coins < 100) return;
-  Sound.wake(); Sound.shake();
+  Sound.wake();
   chestBusy = true; state.coins -= 100; state.chests++;
   const c = rollChar(), isNew = !state.owned[c.id], t = TIERS[c.tier];
   state.owned[c.id] = (state.owned[c.id]||0) + 1;
@@ -1107,27 +1462,41 @@ function openChest(){
   Saves.save(true); renderHUD();
   lastPull = c;
   if (game.state === "running") game.paused = true;
-  const el = $("chestFull");
-  el.hidden = false; el.classList.remove("revealed"); el.classList.add("shaking");
-  el.style.setProperty("--cf", t.color);
+  const el = $("chestFull"), fx = CHEST_FX[c.tier];
+  cfTimers.forEach(clearTimeout); cfTimers = []; cfParts = []; cfSize();
+  el.hidden = false; el.classList.remove("revealed","glowing","quake","dim"); el.classList.add("shaking");
+  el.dataset.tier = c.tier;
+  el.style.setProperty("--cf", t.color); el.style.setProperty("--rayop", fx.rayop); el.style.setProperty("--rayspd", fx.rayspd + "s");
+  el.style.setProperty("--glowpx", fx.glow + "px"); el.style.setProperty("--flash", fx.flash); el.style.setProperty("--shk", ".16s");
   $("cfHint").textContent = "Opening…";
+  Sound.shake(fx.dur, c.tier);
+  const later = (sec, f) => cfTimers.push(setTimeout(f, sec*1000));
+  fx.hints.forEach(([at, txt]) => later(fx.dur*at, () => { $("cfHint").textContent = txt; }));
+  if (fx.glow) later(fx.dur*(c.tier >= 3 ? .4 : .7), () => el.classList.add("glowing"));
+  if (c.tier >= 3) later(fx.dur*.6, () => el.style.setProperty("--shk", ".08s"));
+  if (c.tier >= 4) later(fx.dur*.85, () => el.style.setProperty("--shk", ".05s"));
+  if (c.tier >= 5) later(.3, () => el.classList.add("dim"));
   cfOpen = true; cfRevealed = false; document.body.style.overflow = "hidden";
   $("cfTier").textContent = t.name; $("cfTier").style.color = t.color;
-  $("cfName").textContent = c.name; $("cfName").style.color = c.tier >= 3 ? t.color : "var(--ink)";
-  $("cfNote").textContent = (themeFor(c) ? `Unlocks the ${themeFor(c).world} world · ` : "") + (isNew ? `New car! #${String(c.id+1).padStart(3,"0")} of ${CHARS.length}` : `You already had this one · +${t.refund} coins back`);
-  setTimeout(() => {
-    el.classList.remove("shaking"); el.classList.add("revealed"); cfRevealed = true; Sound.reveal(c.tier);
+  $("cfName").textContent = c.name; $("cfName").style.color = c.tier >= 3 ? t.color : "var(--ink)"; $("cfName").classList.toggle("creator", isCreator(c));
+  $("cfNote").textContent = (themeFor(c) ? `Unlocks the ${themeFor(c).world} world · ` : "") + (isNew ? `New car! ${carNo(c)} of ${CHARS.length}` : `You already had this one · +${t.refund} coins back`);
+  later(fx.dur, () => {
+    el.classList.remove("shaking","dim"); el.classList.add("revealed"); cfRevealed = true; Sound.reveal(c.tier);
+    if (fx.flash){ const f = $("cfFlash"); f.classList.remove("go","go2"); void f.offsetWidth; f.classList.add(c.tier >= 5 ? "go2" : "go"); }
+    if (c.tier >= 4){ el.classList.remove("quake"); void el.offsetWidth; el.classList.add("quake"); }
+    if (c.tier >= 5) $("cfTier").textContent = "Mythic!";
+    cfBurst(c.tier);
     $("cfRun").hidden = state.selected === c.id;
     $("cfAgain").hidden = state.coins < 100;
     $("cfAgain").textContent = "Open another · 100";
     chestBusy = false;
     renderAll();
     setTimeout(() => ($("cfRun").hidden ? $("cfClose") : $("cfRun")).focus({preventScroll:true}), 400);
-  }, 1400);
+  });
 }
 function closeChest(){
   if (!cfOpen || chestBusy) return;
-  cfOpen = false; $("chestFull").hidden = true; $("chestFull").classList.remove("revealed","shaking");
+  cfOpen = false; $("chestFull").hidden = true; $("chestFull").classList.remove("revealed","shaking","glowing","quake","dim"); cfParts = []; cfTimers.forEach(clearTimeout);
   document.body.style.overflow = "";
 }
 $("openChest").addEventListener("click", openChest);
@@ -1367,13 +1736,6 @@ function drawCityBG(){
   const rg = ctx.createLinearGradient(0,GROUND,0,roadBot); rg.addColorStop(0,"#211a38"); rg.addColorStop(1,"#120e22");
   ctx.fillStyle = rg; ctx.fillRect(0, GROUND+1, GW, roadBot-GROUND);
   if (GH - roadBot > 8) drawBeach(roadBot, scroll);
-  // lane dashes
-  const dashOff = scroll % 44;
-  ctx.fillStyle = "rgba(220,200,150,.5)";
-  for (let x = -dashOff; x < GW; x += 44) ctx.fillRect(Math.floor(x), GROUND+18, 22, 3);
-  // reflections of the neon on wet asphalt
-  ctx.fillStyle = "rgba(45,226,230,.05)"; for (let x = -(scroll*.5 % 90); x < GW; x += 90) ctx.fillRect(Math.floor(x), GROUND+6, 30, 1);
-  ctx.fillStyle = "rgba(255,79,163,.05)"; for (let x = -(scroll*.5 % 70) + 30; x < GW; x += 70) ctx.fillRect(Math.floor(x), GROUND+28, 24, 1);
 }
 function drawBG(){
   const th = themeFor(curCar());
@@ -1383,17 +1745,20 @@ function drawBG(){
    Each Mythic car replaces the Miami city with its own world and gets its own exhaust smoke.
    Keys are car names so the list stays correct if cars are ever added. */
 const THEMES = {
-  "Felari Inferno":       { world:"Volcano Night",     smoke:["#ff6a1a","#c4361a","#5a2a22"], spark:"#ffd34d" },
-  "Landoni Neon Phantom": { world:"Synthwave Grid",    smoke:["#ff4fa3","#a04fff","#4a2a6a"], spark:null },
-  "Bugotti Solar Crown":  { world:"Golden Hour",       smoke:["#ffd34d","#f2a33a","#8a6a3a"], spark:"#fff3b0" },
-  "Teslo Hover-X":        { world:"Neo City 2099",     smoke:["#2de2e6","#7ff3ff","#2a5a6a"], spark:null },
-  "Hundahi Elytra":       { world:"Night Race Circuit",smoke:["#4a8cff","#9fc4ff","#3a4a6a"], spark:"#ffffff" },
+  "Magmaclaw Inferno":    { world:"Volcano Night",     smoke:["#ff6a1a","#c4361a","#5a2a22"], spark:"#ffd34d" },
+  "Gridwraith":           { world:"Synthwave Grid",    smoke:["#ff4fa3","#a04fff","#4a2a6a"], spark:null },
+  "Aurelion Sunking":     { world:"Golden Hour",       smoke:["#ffd34d","#f2a33a","#8a6a3a"], spark:"#fff3b0" },
+  "Hoverbee Zeta-9":      { world:"Neo City 2099",     smoke:["#2de2e6","#7ff3ff","#2a5a6a"], spark:null },
+  "THE CREATOR":          { world:"Night Race Circuit",smoke:["#4a8cff","#9fc4ff","#3a4a6a"], spark:"#ffffff" },
+  "Frostmaw":             { world:"Frozen Tundra",     smoke:["#e8f6ff","#b8e4ff","#8ab4d4"], spark:"#ffffff" },
+  "Starskimmer":          { world:"Space Highway",     smoke:["#c77dff","#7a5cff","#3a2a6a"], spark:"#ffffff" },
+  "Abyssal Lumen":        { world:"Deep Sea",          smoke:["#bff6ff","#7fe3f0","#4ab8c8"], spark:null, bubbles:true },
 };
 const themeFor = c => THEMES[c.name] || null;
 
 function skyGrad(top, mid, low){ const g = ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,top); g.addColorStop(.6,mid); g.addColorStop(1,low); ctx.fillStyle = g; ctx.fillRect(0,0,GW,GH); }
 function roadBand(c1, c2){ const bot = Math.min(GH, GROUND + 40); const g = ctx.createLinearGradient(0,GROUND,0,bot); g.addColorStop(0,c1); g.addColorStop(1,c2); ctx.fillStyle = g; ctx.fillRect(0, GROUND+1, GW, bot-GROUND); return bot; }
-function dashes(scroll, col, y, len, gap){ ctx.fillStyle = col; const off = scroll % gap; for (let x = -off; x < GW; x += gap) ctx.fillRect(Math.floor(x), GROUND + (y||18), len||22, 3); }
+function dashes(){ /* plain road: no lane markings */ }
 function loopX(scroll, speed, span){ return -((scroll*speed) % span); }
 
 const WORLD_DRAW = {
@@ -1416,9 +1781,6 @@ const WORLD_DRAW = {
     for (let x = off2 - 90; x < GW + 90; x += 90){ ctx.beginPath(); ctx.moveTo(x, GROUND-6); ctx.lineTo(x+18, GROUND-34); ctx.lineTo(x+30, GROUND-22); ctx.lineTo(x+46, GROUND-44); ctx.lineTo(x+64, GROUND-18); ctx.lineTo(x+90, GROUND-6); ctx.fill(); }
     ctx.fillStyle = "#2a1414"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "#a8441a"; ctx.fillRect(0, GROUND-1, GW, 2);
     const bot = roadBand("#1c1414", "#0d0909");
-    // glowing lava cracks in the road
-    ctx.fillStyle = `rgba(255,100,30,${.35 + .12*Math.sin(game.t*3)})`;
-    for (let x = loopX(scroll, 1, 130); x < GW; x += 130){ ctx.fillRect(Math.floor(x), GROUND+8, 10, 1); ctx.fillRect(Math.floor(x)+10, GROUND+9, 6, 1); ctx.fillRect(Math.floor(x)+40, GROUND+30, 12, 1); ctx.fillRect(Math.floor(x)+52, GROUND+29, 5, 1); }
     dashes(scroll, "rgba(255,170,80,.45)");
     if (GH - bot > 8){ const g = ctx.createLinearGradient(0,bot,0,GH); g.addColorStop(0,"#3a120a"); g.addColorStop(1,"#120606"); ctx.fillStyle = g; ctx.fillRect(0,bot,GW,GH-bot);
       ctx.fillStyle = "rgba(255,110,40,.25)"; for (let r = 0; r < (GH-bot)/12; r++){ const o = (scroll*.3*(1+r*.2) + r*41) % 80; for (let x = -o; x < GW; x += 80) ctx.fillRect(Math.floor(x), bot + 8 + r*12, 26, 2); } }
@@ -1444,8 +1806,8 @@ const WORLD_DRAW = {
     const bot = roadBand("#0c0718", "#07040f");
     // neon grid on the road and below it
     ctx.fillStyle = "rgba(255,79,163,.28)";
-    for (let y = GROUND + 10; y < GH; y += Math.max(6, (y - GROUND) * .35)) ctx.fillRect(0, Math.floor(y), GW, 1);
-    for (let x = loopX(scroll, 1, 32); x < GW; x += 32) ctx.fillRect(Math.floor(x), GROUND+1, 1, GH - GROUND);
+    if (GH - bot > 8){ for (let y = bot + 6; y < GH; y += Math.max(6, (y - bot) * .35)) ctx.fillRect(0, Math.floor(y), GW, 1);
+      for (let x = loopX(scroll, 1, 32); x < GW; x += 32) ctx.fillRect(Math.floor(x), bot, 1, GH - bot); }
   },
   "Golden Hour"(scroll){
     skyGrad("#1a1a3a", "#7a3a3a", "#d98a3a");
@@ -1485,7 +1847,6 @@ const WORLD_DRAW = {
       ctx.fillStyle = "rgba(255,240,200,.55)"; ctx.fillRect(Math.floor(x), y, 3, 1); ctx.fillStyle = "rgba(255,60,90,.45)"; ctx.fillRect(Math.floor(x) - dir*3, y, 2, 1); }
     ctx.fillStyle = "#0a1a26"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "rgba(45,226,230,.55)"; ctx.fillRect(0, GROUND-1, GW, 2);
     const bot = roadBand("#0c1822", "#060e16");
-    ctx.fillStyle = "rgba(45,226,230,.4)"; ctx.fillRect(0, GROUND+19, GW, 1);
     dashes(scroll, "rgba(127,243,255,.35)", 17, 14, 30);
     if (GH - bot > 8){ ctx.fillStyle = "#040a10"; ctx.fillRect(0,bot,GW,GH-bot);
       ctx.fillStyle = "#0a1620"; for (let x = loopX(scroll, 1, 120); x < GW; x += 120) ctx.fillRect(Math.floor(x)+50, bot, 12, GH-bot);
@@ -1512,13 +1873,75 @@ const WORLD_DRAW = {
     // red and white kerbs
     for (let x = loopX(scroll, 1, 20); x < GW; x += 20){ ctx.fillStyle = "#b8283a"; ctx.fillRect(Math.floor(x), GROUND-4, 10, 4); ctx.fillStyle = "#d9dbe3"; ctx.fillRect(Math.floor(x)+10, GROUND-4, 10, 4); }
     const bot = roadBand("#2a2d38", "#191b24");
-    ctx.fillStyle = "rgba(230,232,240,.55)"; ctx.fillRect(0, GROUND+2, GW, 1); ctx.fillRect(0, GROUND+36, GW, 1);
-    // checkered line every so often
-    const cl = 900, cx = loopX(scroll, 1, cl) + 400;
-    for (let r = 0; r < 6; r++) for (let k = 0; k < 2; k++){ ctx.fillStyle = (r + k) % 2 ? "rgba(230,232,240,.7)" : "rgba(20,20,26,.8)"; ctx.fillRect(Math.floor(cx) + k*5, GROUND + 4 + r*5, 5, 5); }
     if (GH - bot > 8){ ctx.fillStyle = "#0e2418"; ctx.fillRect(0, bot, GW, GH-bot);
       for (let x = loopX(scroll, 1, 40); x < GW; x += 40){ ctx.fillStyle = "rgba(40,90,60,.35)"; ctx.fillRect(Math.floor(x), bot, 20, GH-bot); }
       for (let x = loopX(scroll, 1, 20); x < GW; x += 20){ ctx.fillStyle = "#b8283a"; ctx.fillRect(Math.floor(x), bot, 10, 3); ctx.fillStyle = "#d9dbe3"; ctx.fillRect(Math.floor(x)+10, bot, 10, 3); } }
+  },
+  "Frozen Tundra"(scroll){
+    skyGrad("#040c1c", "#0c2440", "#24506a");
+    for (let b2 = 0; b2 < 2; b2++){ ctx.fillStyle = `rgba(${120+b2*60},255,${200+b2*30},.06)`; for (let x = 0; x < GW; x += 4){ const y = 26 + b2*20 + Math.sin(x/50 + game.t*.5 + b2*2)*12; ctx.fillRect(x, y, 4, 18); } }
+    // falling snow
+    stars.forEach(st => { const y = ((st.y*5 + game.t*(14 + st.s*10)) % GH); ctx.fillStyle = "rgba(240,248,255,.55)"; ctx.fillRect(Math.floor((st.x - scroll*.05 + Math.sin(game.t + st.p)*6 + GW*10) % GW), y, st.s, st.s); });
+    // snowy mountains
+    const span = 300, off = loopX(scroll, .07, span);
+    for (let x = off - span; x < GW + span; x += span){
+      ctx.fillStyle = "#1a3048"; ctx.beginPath(); ctx.moveTo(x, GROUND-8); ctx.lineTo(x+90, GROUND-110); ctx.lineTo(x+150, GROUND-70); ctx.lineTo(x+210, GROUND-125); ctx.lineTo(x+300, GROUND-8); ctx.fill();
+      ctx.fillStyle = "rgba(230,242,255,.55)"; ctx.beginPath(); ctx.moveTo(x+70, GROUND-88); ctx.lineTo(x+90, GROUND-110); ctx.lineTo(x+108, GROUND-90); ctx.lineTo(x+96, GROUND-94); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x+188, GROUND-100); ctx.lineTo(x+210, GROUND-125); ctx.lineTo(x+232, GROUND-102); ctx.lineTo(x+214, GROUND-108); ctx.fill();
+    }
+    // pine trees with snow caps
+    const tg = 46, to = loopX(scroll, .4, tg);
+    for (let x = to - tg; x < GW + tg; x += tg){ const h = 30 + ((Math.floor((x - to)/tg) * 7) % 3) * 8;
+      for (let i = 0; i < 5; i++){ const w = 4 + i*3; ctx.fillStyle = "#0c1e28"; ctx.fillRect(Math.floor(x + 10 - w/2), GROUND - 6 - h + i*(h/5), w, h/5 + 1); ctx.fillStyle = "rgba(230,242,255,.5)"; ctx.fillRect(Math.floor(x + 10 - w/2), GROUND - 6 - h + i*(h/5), w, 1); }
+      ctx.fillStyle = "#1a1210"; ctx.fillRect(Math.floor(x + 9), GROUND - 7, 2, 4); }
+    ctx.fillStyle = "#c8dcec"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "#e8f2fa"; ctx.fillRect(0, GROUND-6, GW, 2);
+    const bot = roadBand("#3a4a5a", "#22303e");
+    if (GH - bot > 8){ const g = ctx.createLinearGradient(0,bot,0,GH); g.addColorStop(0,"#9ec4dc"); g.addColorStop(.15,"#5a86a4"); g.addColorStop(1,"#1a3248"); ctx.fillStyle = g; ctx.fillRect(0,bot,GW,GH-bot);
+      ctx.fillStyle = "rgba(255,255,255,.12)"; for (let i = 0; i < 30; i++){ const x = ((i*67 - scroll*.3) % GW + GW) % GW; ctx.fillRect(Math.floor(x), bot + 10 + (i*37) % Math.max(10, GH-bot-10), 14, 1); } }
+  },
+  "Space Highway"(scroll){
+    ctx.fillStyle = "#04030c"; ctx.fillRect(0, 0, GW, GH);
+    // soft nebula
+    const ng = ctx.createRadialGradient(GW*.7, 70, 10, GW*.7, 70, 160); ng.addColorStop(0, "rgba(140,60,200,.22)"); ng.addColorStop(1, "rgba(140,60,200,0)"); ctx.fillStyle = ng; ctx.fillRect(0, 0, GW, GROUND);
+    stars.forEach((st, i) => { ctx.fillStyle = `rgba(255,255,255,${.3 + .25*Math.sin(game.t*2 + st.p)})`; ctx.fillRect(Math.floor((st.x - scroll*.03 + GW*10) % GW), (st.y*1.6 + i*7) % (GROUND-20), st.s, st.s); });
+    // ringed planet
+    const px = GW*.28, py = 64;
+    ctx.fillStyle = "#3a2a6a"; ctx.beginPath(); ctx.arc(px, py, 26, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.arc(px - 8, py - 8, 16, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(200,170,255,.45)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(px, py, 44, 9, -.3, 0, Math.PI*2); ctx.stroke();
+    // shooting star now and then
+    const ss = (game.t*.4) % 3; if (ss < .5){ ctx.fillStyle = "rgba(255,255,255,.6)"; for (let k = 0; k < 8; k++) ctx.fillRect(Math.floor(GW*.9 - ss*500 - k*4), Math.floor(30 + ss*120 + k*1), 2, 1); }
+    // moon surface with craters
+    const cs = 160, co = loopX(scroll, .3, cs);
+    ctx.fillStyle = "#2a2838"; ctx.beginPath(); ctx.moveTo(0, GROUND-6);
+    for (let x = 0; x <= GW; x += 10) ctx.lineTo(x, GROUND - 22 - Math.sin((x + scroll*.3)/60)*8); ctx.lineTo(GW, GROUND); ctx.lineTo(0, GROUND); ctx.fill();
+    for (let x = co - cs; x < GW + cs; x += cs){ ctx.fillStyle = "#1c1a28"; ctx.beginPath(); ctx.ellipse(x + 50, GROUND - 14, 16, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(x + 120, GROUND - 10, 9, 2.5, 0, 0, Math.PI*2); ctx.fill(); }
+    ctx.fillStyle = "#3a3650"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "rgba(199,125,255,.55)"; ctx.fillRect(0, GROUND-1, GW, 2);
+    const bot = roadBand("#1a1828", "#0e0c18");
+    if (GH - bot > 8){ ctx.fillStyle = "#04030c"; ctx.fillRect(0, bot, GW, GH-bot); ctx.fillStyle = "rgba(199,125,255,.4)"; ctx.fillRect(0, bot, GW, 1);
+      stars.forEach((st, i) => { ctx.fillStyle = `rgba(255,255,255,${.2 + .2*Math.sin(game.t*3 + st.p)})`; ctx.fillRect(Math.floor((st.x*1.3 - scroll*.08 + GW*10) % GW), bot + 6 + (i*23) % Math.max(10, GH-bot-8), 1, 1); }); }
+  },
+  "Deep Sea"(scroll){
+    skyGrad("#02141e", "#063040", "#0a4a5a");
+    // light rays from the surface
+    for (let i = 0; i < 4; i++){ const x = ((i*130 - scroll*.03) % (GW + 120) + GW + 120) % (GW + 120) - 60, sw = Math.sin(game.t*.5 + i)*8;
+      ctx.fillStyle = "rgba(160,240,255,.05)"; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 30, 0); ctx.lineTo(x + 70 + sw, GROUND); ctx.lineTo(x + 20 + sw, GROUND); ctx.fill(); }
+    // rising bubbles
+    stars.forEach(st => { const y = GROUND - ((st.y*5 + game.t*(16 + st.s*10)) % GROUND); ctx.strokeStyle = "rgba(190,240,255,.35)"; ctx.lineWidth = 1; ctx.strokeRect(Math.floor((st.x - scroll*.04 + Math.sin(game.t*2 + st.p)*4 + GW*10) % GW), Math.floor(y), st.s + 1, st.s + 1); });
+    // fish
+    for (let i = 0; i < 5; i++){ const dir = i % 2 ? 1 : -1, sp = 14 + i*5, y = 50 + i*22; const x = ((game.t*sp*dir + i*113) % (GW + 40) + GW + 40) % (GW + 40) - 20;
+      ctx.fillStyle = "rgba(10,40,50,.85)"; ctx.fillRect(Math.floor(x), y, 8, 3); ctx.fillRect(Math.floor(x) + (dir > 0 ? -3 : 8), y - 1, 3, 5); }
+    // rocks, coral and kelp
+    const rs = 140, ro = loopX(scroll, .22, rs);
+    for (let x = ro - rs; x < GW + rs; x += rs){
+      ctx.fillStyle = "#06222c"; ctx.beginPath(); ctx.ellipse(x + 40, GROUND - 6, 40, 22, 0, Math.PI, 0); ctx.fill();
+      for (let k = 0; k < 3; k++){ const kx = x + 90 + k*12; ctx.fillStyle = "#0c3a2a"; for (let seg = 0; seg < 10; seg++) ctx.fillRect(Math.floor(kx + Math.sin(game.t*1.5 + seg*.6 + k)*3), GROUND - 8 - seg*5, 3, 5); }
+      ctx.fillStyle = "rgba(255,120,150,.35)"; ctx.fillRect(Math.floor(x + 20), GROUND - 14, 3, 8); ctx.fillRect(Math.floor(x + 24), GROUND - 18, 3, 12); ctx.fillRect(Math.floor(x + 28), GROUND - 12, 3, 6);
+    }
+    ctx.fillStyle = "#3a5a5a"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "rgba(45,226,230,.4)"; ctx.fillRect(0, GROUND-1, GW, 2);
+    const bot = roadBand("#2a4648", "#163032");
+    if (GH - bot > 8){ const g = ctx.createLinearGradient(0,bot,0,GH); g.addColorStop(0,"#0a3a48"); g.addColorStop(1,"#010a10"); ctx.fillStyle = g; ctx.fillRect(0,bot,GW,GH-bot);
+      for (let i = 0; i < 40; i++){ const x = ((i*61 - scroll*.15) % GW + GW) % GW, y = bot + 8 + (i*31) % Math.max(10, GH-bot-10); ctx.fillStyle = "rgba(127,243,255,.12)"; ctx.fillRect(Math.floor(x), y, 1, 1); } }
   },
 };
 
@@ -1532,14 +1955,16 @@ function emitSmoke(c, dt, moving){
     game.smokeAcc--;
     const col = th.smoke[Math.floor(Math.random()*th.smoke.length)];
     game.smoke.push({x: PX - half + 2, y: GROUND + game.py - 8 - Math.random()*3, vx: moving ? -(game.speed*.35) - Math.random()*40 : -20 - Math.random()*15,
-      vy: -10 - Math.random()*18, life: .7 + Math.random()*.4, max: 1.1, r: 2 + Math.random()*2, col});
+      vy: th.bubbles ? -40 - Math.random()*30 : -10 - Math.random()*18, life: .7 + Math.random()*.4, max: 1.1, r: th.bubbles ? 1 + Math.random()*2 : 2 + Math.random()*2, col, bubble: !!th.bubbles});
     if (th.spark && Math.random() < .25) game.smoke.push({x: PX - half, y: GROUND + game.py - 8, vx: -(moving ? game.speed*.5 : 30) - Math.random()*60, vy: -30 - Math.random()*40, life: .4, max: .4, r: 1, col: th.spark, spark: true});
   }
 }
-function updateSmoke(dt){ game.smoke.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy *= .98; p.life -= dt; if (!p.spark) p.r += dt*9; }); game.smoke = game.smoke.filter(p => p.life > 0); }
+function updateSmoke(dt){ game.smoke.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy *= p.bubble ? 1 : .98; p.life -= dt; if (!p.spark) p.r += dt*(p.bubble ? 2 : 9); }); game.smoke = game.smoke.filter(p => p.life > 0); }
 function drawSmoke(){
-  game.smoke.forEach(p => { ctx.globalAlpha = Math.max(0, p.life / p.max) * (p.spark ? .9 : .45); ctx.fillStyle = p.col;
-    const s = Math.round(p.r*2); ctx.fillRect(Math.round(p.x - s/2), Math.round(p.y - s/2), s, s); });
+  game.smoke.forEach(p => { ctx.globalAlpha = Math.max(0, p.life / p.max) * (p.spark ? .9 : (p.bubble ? .8 : .45)); ctx.fillStyle = p.col;
+    const s = Math.round(p.r*2);
+    if (p.bubble){ ctx.strokeStyle = p.col; ctx.lineWidth = 1; ctx.strokeRect(Math.round(p.x - s/2) + .5, Math.round(p.y - s/2) + .5, s + 1, s + 1); }
+    else ctx.fillRect(Math.round(p.x - s/2), Math.round(p.y - s/2), s, s); });
   ctx.globalAlpha = 1;
 }
 
@@ -1680,6 +2105,7 @@ function frame(now){
   update(dt); draw();
   drawChest(false, now/1000);
   if (cfOpen){
+    cfDraw(dt);
     drawChest(cfRevealed, now/1000, cfChestCtx);
     cfCharCtx.clearRect(0,0,400,400);
     if (cfRevealed && lastPull) drawChar(cfCharCtx, lastPull, {x:200, y:392, s:12, t:now/1000});
@@ -1757,15 +2183,15 @@ function lbSubscribe(){
 }
 async function loadMyDaily(){
   if (Saves.mode !== "fire" || !LB.day) return;
-  try { const d = await myDailyRef().get(); LB.myBest = d.exists ? (d.data().best || 0) : 0; } catch {}
+  try { const d = await myDailyRef().get(); LB.myBest = d.exists ? (d.data().best || 0) : 0; LB.myChar = d.exists ? d.data().char : null; } catch {}
   renderLB();
 }
 async function submitScore(dist){
   if (Saves.mode !== "fire" || !Saves.fs || dist <= 0) return;
   lbSubscribe();
   if (dist <= LB.myBest) return;
-  LB.myBest = dist; renderLB();
-  try { await myDailyRef().set({name: state.name || "Driver", best: dist, char: state.selected, at: Date.now()}); toast("New best today: " + fmt(dist) + " m"); }
+  LB.myBest = dist; LB.myChar = curCar().id; renderLB();
+  try { await myDailyRef().set({name: state.name || "Driver", best: dist, char: curCar().id, at: Date.now()}); toast("New best today: " + fmt(dist) + " m"); }
   catch { $("lbMsg").textContent = "Your score couldn't post to the leaderboard. Check that the newest Firestore rules are published."; }
 }
 function renderLB(){
@@ -1776,12 +2202,16 @@ function renderLB(){
   LB.rows.forEach((r, i) => {
     const li = document.createElement("li"); if (Saves.mode === "fire" && r.id === Saves.uid) li.className = "me";
     const rk = document.createElement("span"); rk.className = "rk"; rk.textContent = i + 1;
-    const cv = document.createElement("canvas"); cv.width = 96; cv.height = 56;
-    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = cleanName(r.name) || "Driver";
+    const cv = document.createElement("canvas"); cv.width = 144; cv.height = 80;
+    const ch0 = CHARS[+r.char] || CHARS[0];
+    const nm = document.createElement("span"); nm.className = "who2";
+    const n1 = document.createElement("span"); n1.className = "nm"; n1.textContent = cleanName(r.name) || "Driver";
+    const n2 = document.createElement("span"); n2.className = "car"; n2.textContent = ch0.name; if (isCreator(ch0)) n2.classList.add("creator");
+    n2.style.color = isCreator(ch0) ? "" : TIERS[ch0.tier].color; nm.append(n1, n2);
     const sc = document.createElement("span"); sc.className = "sc"; sc.textContent = fmt(Math.floor(+r.best || 0)) + " m";
     li.append(rk, cv, nm, sc); list.append(li);
     const ch = CHARS[+r.char] || CHARS[0];
-    drawChar(setupCanvas(cv), ch, {x:48, y:48, s:2.6, t:0, glow:false});
+    drawChar(setupCanvas(cv), ch, {x:72, y:70, s:3.4, t:0, glow:false});
   });
   const you = $("lbYou"); you.textContent = "";
   if (Saves.mode === "fire"){
@@ -1809,7 +2239,7 @@ $("nameForm").addEventListener("submit", async e => {
   const n = cleanName($("nameInput").value);
   if (!n){ toast("Use letters or numbers for your name"); return; }
   state.name = n; $("nameInput").value = n; Saves.save(true); toast("Leaderboard name saved");
-  if (Saves.mode === "fire" && LB.myBest > 0){ try { await myDailyRef().set({name:n, best:LB.myBest, char:state.selected, at:Date.now()}); } catch {} }
+  if (Saves.mode === "fire" && LB.myBest > 0){ try { await myDailyRef().set({name:n, best:LB.myBest, char: LB.myChar ?? state.selected, at:Date.now()}); } catch {} }
 });
 
 let authMode = "signup";
