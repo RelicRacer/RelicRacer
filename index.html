@@ -170,7 +170,7 @@ window.FIREBASE_CONFIG = {
     <div class="brand"><h1>Relic Runner</h1><span>Desert ruins · endless run</span></div>
     <div class="purse">
       <div class="chip" title="Coins to spend"><span class="coin-ic"></span><span id="hudCoins">0</span><small>coins</small></div>
-      <div class="chip" title="Characters unlocked"><span id="hudOwned">1</span><small>/ 100 found</small></div>
+      <div class="chip" title="Characters unlocked"><span id="hudOwned">1</span><small id="hudTotal">/ 100 found</small></div>
       <div class="chip" title="Best run"><small>Best</small><span id="hudBest">0 m</span></div>
     </div>
   </header>
@@ -303,6 +303,7 @@ combo(3, ["yeti","golem","kitsune","samurai","unicorn"], [["Storm","#5b7fa8"],["
 add(4,"Solar Dragon","dragon","#f2a33a"); add(4,"Ember Phoenix","phoenix","#ff6a2b"); add(4,"Abyss Kraken","kraken","#3456b8");
 add(4,"Gilded Pharaoh","pharaoh","#e8c14f"); add(4,"Void Knight","voidknight","#3a2d5c"); add(4,"Thunder Griffin","griffin","#c9a46a");
 add(5,"Prism Sovereign","sovereign","#ff5ea8");
+add(5,"Mason","mason","#2f5bd1");   // #101: new characters always go at the END of this list
 const tierCounts = TIERS.map((_, i) => CHARS.filter(c => c.tier === i).length);
 
 function hexRGB(h){h=h.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
@@ -322,7 +323,7 @@ function drawChar(ctx, c, o){
   else { dark = shade(main,-.38); light = shade(main,.55); }
   const SIL = "#0b0c22";
   ctx.save(); ctx.translate(o.x, o.y); ctx.scale(o.s, o.s);
-  if (!sil && c.tier >= 3 && o.glow !== false){ ctx.shadowColor = c.tier===5 ? main : TIERS[c.tier].color; ctx.shadowBlur = c.tier>=4 ? 14 : 9; }
+  if (!sil && c.tier >= 3 && o.glow !== false){ ctx.shadowColor = c.sp==="mason" ? "rgba(255,211,77,.7)" : (c.tier===5 ? main : TIERS[c.tier].color); ctx.shadowBlur = c.sp==="mason" ? 5 : (c.tier>=4 ? 14 : 9); }
   const P = (x,y,w,h,col) => { ctx.fillStyle = sil ? SIL : col; ctx.fillRect(x,y,w,h); };
   const duck = pose === "duck";
   const W = duck ? 8 : 7, T = duck ? -11 : -17;
@@ -331,6 +332,7 @@ function drawChar(ctx, c, o){
   let bob = (pose === "run" && legless) ? (ph ? -1 : 0) : 0;
   const B = legless ? 0 : -3;
   ctx.translate(0, bob);
+  if (c.sp === "mason"){ drawMason(P, t, pose, ph, sil); ctx.restore(); return; }
   let bodyCol = main, legCol = dark, eyeWhite = "#fff", pupil = "#17182c";
   if (c.sp === "panda") { bodyCol = "#f2efe8"; legCol = main; }
   if (c.sp === "mushroom") { bodyCol = "#efe0c2"; legCol = "#c9b48e"; }
@@ -454,6 +456,47 @@ function drawChar(ctx, c, o){
   ctx.restore();
 }
 
+/* Mason: blue suit, sunglasses, briefcase. Bottom-center at 0,0, facing right. */
+function drawMason(P, t, pose, ph, sil){
+  const SKIN="#f2c7a5", SKIN_D="#d9a585", HAIR="#3a271c", HAIR_L="#5a3d2b", SUIT="#2f5bd1", SUIT_D="#1f3f9e", PANTS="#1d3484",
+        SHIRT="#f4f4f8", TIE="#c2273a", SHOE="#16161e", CASE="#7a4a24", CASE_D="#5a3418", GOLD="#ffd34d", SHADES="#0d0d14";
+  const duck = pose === "duck", air = pose === "jump";
+  const up = duck ? 5 : 0;                       // upper body drops when ducking
+  // legs + shoes
+  if (duck){
+    P(-3,-3,3,2,PANTS); P(0,-3,3,2,PANTS); P(-3,-1,3,1,SHOE); P(0,-1,4,1,SHOE);
+  } else if (air){
+    P(-3,-7,3,4,PANTS); P(0,-7,3,3,PANTS); P(-3,-3,3,1,SHOE); P(0,-4,4,1,SHOE);
+  } else {
+    const a = ph ? 1 : 0, b = ph ? 0 : 1;
+    P(-4,-7,3,6-a,PANTS); P(0,-7,3,6-b,PANTS);
+    P(-4,-1-a,3,1,SHOE); P(0,-1-b,4,1,SHOE);
+  }
+  // back arm
+  P(-6,-13+up,2,5,SUIT_D); P(-6,-8+up,2,1,SKIN_D);
+  // torso: jacket, shirt V, tie, lapels, buttons
+  P(-4,-14+up,8,7,SUIT); P(-5,-13+up,10,5,SUIT); P(-4,-8+up,8,1,SUIT_D);
+  P(0,-14+up,2,3,SHIRT); P(0,-14+up,1,4,TIE); P(1,-11+up,1,1,TIE);
+  P(-1,-14+up,1,3,SUIT_D); P(2,-14+up,1,3,SUIT_D); P(1,-9+up,1,1,GOLD);
+  // head
+  const hy = -21 + up;
+  P(-3,hy,7,7,SKIN); P(-4,hy+1,9,5,SKIN); P(-4,hy+2,1,2,SKIN_D);
+  P(-1,hy+7,4,0,SKIN);
+  // hair: short, swept up at the front
+  P(-4,hy-1,8,2,HAIR); P(-3,hy-2,7,1,HAIR); P(1,hy-3,3,1,HAIR); P(2,hy-4,2,1,HAIR);
+  P(-4,hy+1,2,2,HAIR); P(-4,hy+3,1,1,HAIR); P(0,hy-2,3,1,HAIR_L); P(4,hy,1,1,HAIR);
+  // sunglasses with a glint
+  P(-1,hy+2,6,1,SHADES); P(0,hy+3,2,1,SHADES); P(3,hy+3,2,1,SHADES); P(-3,hy+2,2,1,SHADES);
+  if (!sil && Math.floor(t*2)%3===0) P(4,hy+2,1,1,"#ffffff");
+  // smile
+  P(1,hy+5,2,1,"#b8675a");
+  // front arm + briefcase (swings while running)
+  const sw = (pose === "run") ? (ph ? 1 : 0) : 0;
+  P(4,-13+up,2,5,SUIT_D); P(4,-8+up,2,1,SKIN);
+  const by = -7 + up + sw;
+  P(4,by,3,1,CASE_D); P(2,by+1,8,5,CASE); P(2,by+1,8,1,CASE_D); P(5,by+3,2,1,GOLD); P(2,by+5,8,1,CASE_D);
+}
+
 /* ============================== STATE & SAVES ============================== */
 const newState = () => ({v:1, coins:0, lifetimeCoins:0, best:0, bestRound:0, runs:0, chests:0, owned:{"0":1}, selected:0, updatedAt:0});
 function sanitize(s){
@@ -462,7 +505,7 @@ function sanitize(s){
   d.coins = num(s.coins,0); d.lifetimeCoins = num(s.lifetimeCoins,d.coins); d.best = num(s.best,0); d.bestRound = num(s.bestRound,0);
   d.runs = num(s.runs,0); d.chests = num(s.chests,0); d.updatedAt = num(s.updatedAt,0);
   d.owned = {};
-  if (s.owned && typeof s.owned === "object") for (const k in s.owned){ const i = +k; if (Number.isInteger(i) && i>=0 && i<100 && num(s.owned[k],0)>0) d.owned[i] = num(s.owned[k],1); }
+  if (s.owned && typeof s.owned === "object") for (const k in s.owned){ const i = +k; if (Number.isInteger(i) && i>=0 && i<CHARS.length && num(s.owned[k],0)>0) d.owned[i] = num(s.owned[k],1); }
   if (!Object.keys(d.owned).length) d.owned = {"0":1};
   d.selected = d.owned[s.selected] ? +s.selected : +Object.keys(d.owned)[0];
   return d;
@@ -540,6 +583,7 @@ function setSaveStatus(kind){
 function renderHUD(){
   $("hudCoins").textContent = fmt(state.coins);
   $("hudOwned").textContent = ownedCount();
+  $("hudTotal").textContent = "/ " + CHARS.length + " found";
   $("hudBest").textContent = fmt(state.best) + " m";
   const c = CHARS[state.selected];
   $("nowName").textContent = c.name;
@@ -556,7 +600,7 @@ function renderOdds(){
 let filter = -1;
 function renderFilters(){
   const opts = [{i:-1,name:"All"}].concat(TIERS.map((t,i)=>({i,name:t.name})));
-  $("filters").innerHTML = opts.map(o=>`<button type="button" data-f="${o.i}" aria-pressed="${filter===o.i}" ${o.i>=0?`style="color:${TIERS[o.i].color}"`:""}>${o.name}${o.i>=0?` ${tierFound(o.i)}/${tierCounts[o.i]}`:` ${ownedCount()}/100`}</button>`).join("");
+  $("filters").innerHTML = opts.map(o=>`<button type="button" data-f="${o.i}" aria-pressed="${filter===o.i}" ${o.i>=0?`style="color:${TIERS[o.i].color}"`:""}>${o.name}${o.i>=0?` ${tierFound(o.i)}/${tierCounts[o.i]}`:` ${ownedCount()}/${CHARS.length}`}</button>`).join("");
 }
 const cardCanvases = [];
 function renderCards(){
@@ -685,7 +729,7 @@ $("openChest").addEventListener("click", () => {
     $("reveal").style.setProperty("--glow", t.color + "66");
     $("revealTier").textContent = t.name; $("revealTier").style.color = t.color;
     $("revealName").textContent = c.name;
-    $("revealNote").textContent = isNew ? `New runner! #${String(c.id+1).padStart(3,"0")} of 100` : `Duplicate · +${t.refund} coins back`;
+    $("revealNote").textContent = isNew ? `New runner! #${String(c.id+1).padStart(3,"0")} of ${CHARS.length}` : `Duplicate · +${t.refund} coins back`;
     $("reveal").hidden = false; $("runWithNew").hidden = state.selected === c.id;
     chestBusy = false;
     renderAll();
