@@ -36,6 +36,33 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .coin-ic{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#f2b33d 55%,#a8701c);box-shadow:0 0 0 2px #7a4e12 inset}
 .chip small{font-family:var(--body);color:var(--muted);font-size:12px}
 
+/* account banner */
+.acct{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:20px 28px;align-items:center;padding:22px;border-radius:16px;
+  background:linear-gradient(120deg,#3a2a6e,#24285e 55%,#1d3a5a);border:2px solid var(--sand);box-shadow:0 0 0 4px rgba(233,192,122,.12),0 16px 36px rgba(0,0,0,.35)}
+.acct h2{font-size:clamp(26px,4.4vw,40px);color:var(--sand);line-height:1.05}
+.acct-copy{display:flex;flex-direction:column;gap:10px;min-width:0}
+.acct-copy p{margin:0;font-size:17px;max-width:46ch}
+.acct-form{display:flex;flex-direction:column;gap:10px;min-width:0}
+.acct-form input{font-size:16px;padding:12px 14px}
+.btn.big{font-size:20px;padding:14px 22px}
+.tabs{display:flex;gap:6px;background:#141536;border:1px solid var(--line);border-radius:12px;padding:4px}
+.tabs button{flex:1;border:0;border-radius:9px;padding:9px;background:transparent;color:var(--muted);font-family:var(--display);font-size:17px}
+.tabs button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.acct.signed{grid-template-columns:1fr auto;padding:12px 18px;border-width:1px;border-color:var(--line);box-shadow:none;background:var(--night-2)}
+.acct.signed h2,.acct.signed #acctLead{display:none}
+.acct.signed .acct-copy{gap:0}
+@media (max-width:760px){.acct{grid-template-columns:minmax(0,1fr)}.acct.signed{grid-template-columns:minmax(0,1fr)}}
+
+/* end-of-run sign-up prompt */
+.over-cta{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:12px;background:rgba(12,13,36,.94)}
+.oc-card{max-width:520px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.oc-card h3{font-size:clamp(20px,3vw,28px);color:#ff9a8a}
+.oc-card h3 span{color:var(--ink)}
+.oc-card p{margin:0;font-size:15px}
+.oc-btns{justify-content:center}
+.oc-again{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14px;padding:4px}
+@media (max-width:640px){.screen{display:flex;flex-direction:column}.over-cta{order:2;position:static;background:#16173a;border-top:1px solid var(--line);padding:16px}.btn.big{font-size:18px}}
+
 /* cabinet */
 .cabinet{background:linear-gradient(#262a5c,#1a1c42);border:2px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
 .screen{position:relative;border-radius:8px;overflow:hidden;background:#0c0d24}
@@ -148,8 +175,35 @@ window.FIREBASE_CONFIG = {
     </div>
   </header>
 
+  <section class="acct" id="acct" aria-labelledby="acctH">
+    <div class="acct-copy">
+      <h2 id="acctH">Save your runners</h2>
+      <p id="acctLead">Sign up free to save your progress, keep your coins and save your characters. Then play on any device.</p>
+      <div class="status"><span class="dot" id="saveDot"></span><span id="saveText">Checking for your account…</span></div>
+    </div>
+    <form id="authBox" class="acct-form" hidden novalidate>
+      <div class="tabs" role="group" aria-label="Sign up or log in">
+        <button type="button" id="tabSignup" aria-pressed="true">Sign up</button>
+        <button type="button" id="tabLogin" aria-pressed="false">Log in</button>
+      </div>
+      <input type="email" id="authEmail" placeholder="Email" autocomplete="email" aria-label="Email">
+      <input type="password" id="authPass" placeholder="Password (6 or more characters)" autocomplete="new-password" aria-label="Password">
+      <button class="btn big" id="authSubmit" type="submit">Create my free account</button>
+      <div class="row"><button class="btn ghost small" id="authGoogle" type="button">Continue with Google</button><button class="btn ghost small" id="authReset" type="button" hidden>Forgot password</button></div>
+      <p class="msg" id="authMsg" role="status"></p>
+    </form>
+    <div class="who" id="whoBox" hidden><div>Logged in as <b id="whoName"></b></div><button class="btn ghost small" id="logoutBtn" type="button">Log out</button></div>
+  </section>
+
   <section class="cabinet" aria-label="Game">
-    <div class="screen"><canvas id="game" width="960" height="360" aria-label="Relic Runner game screen. Press space or tap to start."></canvas></div>
+    <div class="screen"><div class="over-cta" id="overCta" hidden>
+      <div class="oc-card">
+        <h3>Run over! <span id="ocSum"></span></h3>
+        <p>You're not signed in, so your coins and characters are only saved on this device. Sign up to save your progress, keep your coins and save your characters.</p>
+        <div class="row oc-btns"><button class="btn big" id="ocSignup" type="button">Sign up to save</button><button class="btn ghost" id="ocLogin" type="button">Log in</button></div>
+        <button class="oc-again" id="ocAgain" type="button">Play again without saving</button>
+      </div>
+    </div><canvas id="game" width="960" height="360" aria-label="Relic Runner game screen. Press space or tap to start."></canvas></div>
     <div class="controls">
       <div class="runner-now"><canvas id="nowCv" width="80" height="80"></canvas><div>Running as <b id="nowName">—</b><br><span id="nowPerk"></span></div></div>
       <div class="keys"><kbd>Space</kbd> / <kbd>↑</kbd> jump (hold for higher) · <kbd>↓</kbd> duck · <kbd>P</kbd> pause</div>
@@ -202,19 +256,9 @@ window.FIREBASE_CONFIG = {
     <h2 id="saveH">Player &amp; saves</h2>
     <div class="save-grid">
       <div class="box">
-        <h3>Account</h3>
-        <div class="status"><span class="dot" id="saveDot"></span><span id="saveText">Checking for your account…</span></div>
-        <div class="who" id="whoBox" hidden><div><b id="whoName"></b><br><span class="sub">Progress saves to your account automatically.</span></div><button class="btn ghost small" id="logoutBtn" type="button">Log out</button></div>
-        <form id="authBox" hidden novalidate style="display:flex;flex-direction:column;gap:8px">
-          <p class="sub">Log in to save your runners to your account and play on any device.</p>
-          <input type="email" id="authEmail" placeholder="Email" autocomplete="email" aria-label="Email">
-          <input type="password" id="authPass" placeholder="Password (6 or more characters)" autocomplete="current-password" aria-label="Password">
-          <div class="row"><button class="btn small" id="authLogin" type="submit">Log in</button><button class="btn ghost small" id="authSignup" type="button">Create account</button></div>
-          <div class="row"><button class="btn ghost small" id="authGoogle" type="button">Continue with Google</button><button class="btn ghost small" id="authReset" type="button">Forgot password</button></div>
-          <p class="msg" id="authMsg"></p>
-        </form>
+        <h3>Play without an account</h3>
         <div id="localBox">
-          <p class="sub" style="margin-bottom:8px;margin-top:6px"><b style="color:var(--ink)">No account?</b> Play with a profile on this device. Each one keeps its own coins and characters.</p>
+          <p class="sub" style="margin-bottom:8px">Profiles saved on this device only. Each one keeps its own coins and characters.</p>
           <div class="row"><select id="profileSel" aria-label="Choose player"></select><button class="btn ghost small" id="delProfile" type="button">Delete</button></div>
           <div class="confirm" id="delConfirm" hidden><span id="delText"></span><button class="btn small" id="delYes" type="button">Delete</button><button class="btn ghost small" id="delNo" type="button">Keep</button></div>
           <div class="row" style="margin-top:8px"><input type="text" id="newProfile" maxlength="20" placeholder="New player name" aria-label="New player name"><button class="btn small" id="addProfile" type="button">Add player</button></div>
@@ -551,8 +595,11 @@ $("filters").addEventListener("click", e => { const b = e.target.closest("button
 /* ---------- account box ---------- */
 function renderAccount(){
   const cloud = Saves.mode === "fire";
-  $("localBox").hidden = cloud; $("whoBox").hidden = !cloud;
+  $("whoBox").hidden = !cloud;
   $("authBox").hidden = cloud || !Saves.auth;
+  $("acct").classList.toggle("signed", cloud);
+  if (cloud) $("overCta").hidden = true;
+
   if (!cloud){
     const sel = $("profileSel"); sel.textContent = "";
     Saves.profiles().forEach(p => { const o=document.createElement("option"); o.value=p; o.textContent=p; if (p===Saves.profile) o.selected=true; sel.append(o); });
@@ -662,7 +709,7 @@ const stars = Array.from({length:70},()=>({x:Math.random()*GW, y:Math.random()*1
 function resetRun(){
   Object.assign(game, {t:0, speed:300, dist:0, round:1, roundDist:0, runCoins:0, py:0, vy:0, onGround:true, ducking:false, obs:[], coins:[], parts:[], nextObs:420, nextCoin:260, banner:{text:"Round 1", sub:"Go!", t:1.6}, flash:0, paused:false});
 }
-function startRun(){ resetRun(); game.state = "running"; }
+function startRun(){ resetRun(); game.state = "running"; $("overCta").hidden = true; }
 function endRun(){
   game.state = "over"; game.overT = game.t;
   state.runs++; const d = Math.floor(game.dist);
@@ -671,6 +718,10 @@ function endRun(){
   if (game.round > state.bestRound) state.bestRound = game.round;
   game.newBest = newBest;
   Saves.save(true); renderHUD(); renderCode();
+  if (Saves.mode !== "fire" && Saves.auth){
+    $("ocSum").textContent = `${fmt(d)} m · +${game.runCoins} coins`;
+    $("overCta").hidden = false;
+  }
 }
 function jumpPress(){
   if (game.state !== "running"){ if (game.state==="over" && game.t - game.overT < .6) return; startRun(); return; }
@@ -861,7 +912,7 @@ function frame(now){
 }
 
 /* ---------- input ---------- */
-const typing = () => { const a = document.activeElement; return a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT"); };
+const typing = () => { const a = document.activeElement; return a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT"||(a.tagName==="BUTTON"&&!a.classList.contains("pad"))); };
 document.addEventListener("keydown", e => {
   if (typing()) return;
   if (e.code==="Space"||e.code==="ArrowUp"||e.code==="KeyW"){ e.preventDefault(); if (!e.repeat) jumpPress(); }
@@ -916,6 +967,17 @@ function authError(e){
   };
   return m[e && e.code] || ("Sign-in didn't work: " + ((e && e.message) || "unknown error"));
 }
+let authMode = "signup";
+function setAuthMode(m){
+  authMode = m;
+  $("tabSignup").setAttribute("aria-pressed", m === "signup");
+  $("tabLogin").setAttribute("aria-pressed", m === "login");
+  $("authSubmit").textContent = m === "signup" ? "Create my free account" : "Log in";
+  $("authPass").setAttribute("autocomplete", m === "signup" ? "new-password" : "current-password");
+  $("authReset").hidden = m === "signup";
+  $("authMsg").textContent = "";
+}
+$("ocAgain").addEventListener("click", () => { $("overCta").hidden = true; startRun(); });
 function bootFirebase(){
   const cfg = window.FIREBASE_CONFIG;
   if (!window.firebase || !cfg || !cfg.apiKey || cfg.apiKey.startsWith("PASTE")){ setSaveStatus("nosetup"); return; }
@@ -927,13 +989,24 @@ function bootFirebase(){
   const msg = t => { $("authMsg").textContent = t; };
   const creds = () => [$("authEmail").value.trim(), $("authPass").value];
   $("authBox").addEventListener("submit", async e => {
-    e.preventDefault(); const [em, pw] = creds(); msg("Logging in…");
-    try { await auth.signInWithEmailAndPassword(em, pw); msg(""); } catch (err) { msg(authError(err)); }
+    e.preventDefault(); const [em, pw] = creds();
+    if (authMode === "signup"){
+      msg("Creating your account…");
+      try { await auth.createUserWithEmailAndPassword(em, pw); msg(""); } catch (err) { msg(authError(err)); }
+    } else {
+      msg("Logging in…");
+      try { await auth.signInWithEmailAndPassword(em, pw); msg(""); } catch (err) { msg(authError(err)); }
+    }
   });
-  $("authSignup").addEventListener("click", async () => {
-    const [em, pw] = creds(); msg("Creating your account…");
-    try { await auth.createUserWithEmailAndPassword(em, pw); msg(""); } catch (err) { msg(authError(err)); }
-  });
+  $("tabSignup").addEventListener("click", () => setAuthMode("signup"));
+  $("tabLogin").addEventListener("click", () => setAuthMode("login"));
+  const goAuth = mode => {
+    setAuthMode(mode); $("overCta").hidden = true;
+    $("acct").scrollIntoView({behavior:"smooth", block:"start"});
+    setTimeout(() => $("authEmail").focus({preventScroll:true}), 450);
+  };
+  $("ocSignup").addEventListener("click", () => goAuth("signup"));
+  $("ocLogin").addEventListener("click", () => goAuth("login"));
   $("authGoogle").addEventListener("click", async () => {
     msg("");
     try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (err) { msg(authError(err)); }
@@ -962,7 +1035,7 @@ function bootFirebase(){
       } else {
         Saves.save(true);   // first login: carry this device's progress into the new account
       }
-      $("whoName").textContent = u.displayName || u.email || "Player";
+      $("whoName").textContent = u.displayName || u.email || "Player"; $("authPass").value = "";
       renderAll(); toast("Welcome, " + (u.displayName || u.email || "runner"));
     } catch (e) {
       Saves.mode = "local"; setSaveStatus("fallback"); renderAccount();
