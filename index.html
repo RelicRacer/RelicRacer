@@ -4,7 +4,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Figtree:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&family=Figtree:wght@400;500;700&display=swap">
 <style>
 /* Layout: one column "expedition log" — game cabinet on top, chest + collection + save ledger below. Single night-desert look by choice. */
 :root{
@@ -13,6 +13,7 @@
   --danger:#ff6b6b;
   --r-common:#b9bcc9; --r-uncommon:#6fd36a; --r-rare:#4aa8ff; --r-epic:#b77bff; --r-legendary:#ffb23f; --r-mythic:#ff5ea8;
   --display:"Pixelify Sans", "Courier New", monospace;
+  --num:"Press Start 2P", "Pixelify Sans", "Courier New", monospace;
   --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme:dark;
 }
@@ -113,6 +114,17 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .cf-hint{color:var(--muted);font-size:15px;font-family:var(--display);height:1.4em}
 .chest-full.revealed .cf-hint{display:none}
 @media (prefers-reduced-motion: reduce){ .cf-rays{animation:none} .chest-full.shaking .cf-chest{animation:none} .chest-full.revealed .cf-char{animation:none;opacity:1;transform:none} }
+
+/* numbers: blocky arcade font, easy to read */
+#hudCoins,#hudOwned,#hudBest{font-family:var(--num);font-size:12px;line-height:1.4}
+.odds td:not(:first-child){font-family:var(--num);font-size:11px}
+.best-big b{font-family:var(--num) !important;font-size:clamp(22px,5vw,32px) !important;line-height:1.4 !important}
+.recs dd{font-family:var(--num) !important;font-size:14px !important;line-height:1.8}
+.lb .sc{font-family:var(--num) !important;font-size:12px !important}
+.lb .rk{font-family:var(--num) !important;font-size:14px !important}
+.card .num,.card .cnt{font-family:var(--num) !important;font-size:8px !important}
+.chip small{font-size:12px}
+#ocSum{font-family:var(--num);font-size:.6em}
 
 /* leaderboard + records */
 .lbgrid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
@@ -1054,7 +1066,13 @@ function drawCoin(k){
   ctx.fillStyle = "#f2b33d"; ctx.beginPath(); ctx.ellipse(k.x, k.y, w, k.r, 0, 0, Math.PI*2); ctx.fill();
   if (w > 3){ ctx.fillStyle = "#fff3b0"; ctx.fillRect(k.x-1, k.y-k.r+2, 2, 3); }
 }
-function text(str, x, y, size, col, align){ ctx.font = `700 ${size}px "Pixelify Sans", "Courier New", monospace`; ctx.textAlign = align||"left"; ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillText(str, x+2, y+2); ctx.fillStyle = col; ctx.fillText(str, x, y); }
+// kind "num" uses the blocky arcade font for scores and counters; everything else keeps Pixelify Sans
+function textFont(size, kind){ return kind === "num" ? `${size}px "Press Start 2P", "Pixelify Sans", monospace` : `700 ${size}px "Pixelify Sans", "Courier New", monospace`; }
+function text(str, x, y, size, col, align, kind){
+  ctx.font = textFont(size, kind); ctx.textAlign = align||"left";
+  ctx.lineJoin = "round"; ctx.lineWidth = kind === "num" ? 3 : 3.5; ctx.strokeStyle = "rgba(10,9,28,.9)"; ctx.strokeText(str, x, y);
+  ctx.fillStyle = col; ctx.fillText(str, x, y);
+}
 function draw(){
   ctx.setTransform(SCALE,0,0,SCALE,0,0);
   drawBG();
@@ -1069,18 +1087,18 @@ function draw(){
   if (game.flash > 0){ ctx.fillStyle = `rgba(255,255,255,${game.flash})`; ctx.fillRect(0,0,GW,GH); }
   // HUD
   {
-    text("ROUND " + game.round, 14, 24, 16, "#e9c07a");
+    text("ROUND " + game.round, 14, 24, 11, "#e9c07a", "left", "num");
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(14,31,120,6);
     ctx.fillStyle = "#3fd0c9"; ctx.fillRect(14,31,120*Math.min(1,game.roundDist/ROUND_LEN(game.round)),6);
     const bestNow = Math.max(state.best, Math.floor(game.dist));
-    text("BEST " + fmt(bestNow) + " m", GW/2, 24, 14, game.state==="running" && Math.floor(game.dist) > state.best && state.best > 0 ? "#3fd0c9" : "#c9c7ee", "center");
-    text(fmt(Math.floor(game.dist)) + " m", GW-14, 24, 16, "#f3ead9", "right");
+    text("BEST " + fmt(bestNow) + "m", GW/2, 24, 9, game.state==="running" && Math.floor(game.dist) > state.best && state.best > 0 ? "#3fd0c9" : "#d9d7f5", "center", "num");
+    text(fmt(Math.floor(game.dist)) + "m", GW-14, 24, 13, "#ffffff", "right", "num");
     const coinTxt = fmt(state.coins);
-    ctx.font = '700 15px "Pixelify Sans", "Courier New", monospace';
+    ctx.font = textFont(12, "num");
     const cw = ctx.measureText(coinTxt).width;
-    drawCoin({x:GW-14-cw-11, y:40, r:6, spin:0});
-    text(coinTxt, GW-14, 45, 15, "#ffe08a", "right");
-    if (game.state !== "ready") text("+" + game.runCoins + " this run", GW-14, 62, 11, "#c9c7ee", "right");
+    drawCoin({x:GW-14-cw-12, y:41, r:6, spin:0});
+    text(coinTxt, GW-14, 46, 12, "#ffe08a", "right", "num");
+    if (game.state !== "ready") text("+" + game.runCoins + " THIS RUN", GW-14, 63, 7, "#d9d7f5", "right", "num");
   }
   if (game.banner && game.state === "running"){
     const a = Math.min(1, game.banner.t*2);
@@ -1095,10 +1113,11 @@ function draw(){
   if (game.state === "over"){
     ctx.fillStyle = "rgba(10,10,30,.55)"; ctx.fillRect(0,0,GW,GH);
     text("RUN OVER", GW/2, 74, 30, "#ff8a7a", "center");
-    text(`${fmt(Math.floor(game.dist))} m · reached round ${game.round} · +${game.runCoins} coins`, GW/2, 102, 14, "#f3ead9", "center");
-    if (game.newBest) text("New best distance!", GW/2, 124, 14, "#3fd0c9", "center");
-    text(state.coins >= 100 ? "You can open a chest below" : (100-state.coins) + " coins until your next chest", GW/2, 146, 12, "#ffe08a", "center");
-    text("Press Space or tap to run again", GW/2, 174, 13, "#a9a8cf", "center");
+    text(fmt(Math.floor(game.dist)) + "m", GW/2, 106, 20, "#ffffff", "center", "num");
+    text(`ROUND ${game.round}  ·  +${game.runCoins} COINS`, GW/2, 126, 9, "#ffe08a", "center", "num");
+    if (game.newBest) text("New best distance!", GW/2, 146, 14, "#3fd0c9", "center");
+    text(state.coins >= 100 ? "You can open a chest below" : (100-state.coins) + " coins until your next chest", GW/2, 164, 12, "#f3ead9", "center");
+    text("Press Space or tap to run again", GW/2, 186, 13, "#c9c7ee", "center");
   }
   if (game.paused){ ctx.fillStyle = "rgba(10,10,30,.5)"; ctx.fillRect(0,0,GW,GH); text("PAUSED", GW/2, 110, 28, "#f3ead9", "center"); text("Tap or press P to continue", GW/2, 134, 12, "#a9a8cf", "center"); }
 }
