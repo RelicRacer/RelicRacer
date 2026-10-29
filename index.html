@@ -132,10 +132,24 @@ body.fs .cabinet{position:fixed;inset:0;z-index:45;margin:0;border:0;border-radi
 body.fs .screen{flex:1;border-radius:0;display:block;position:relative}
 body.fs canvas#game{width:100%;height:100%}
 body.fs .controls{display:none}
-body.fs .fs-exit{display:block;position:absolute;z-index:3;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom, 0px));
+body.fs .fs-exit{display:block;
   font-family:var(--display);font-size:15px;color:var(--ink);background:rgba(18,12,42,.7);border:1px solid var(--line);border-radius:999px;padding:7px 20px}
 body.fs .over-cta{position:absolute;left:0;right:0;top:auto;bottom:calc(56px + env(safe-area-inset-bottom, 0px));background:rgba(18,12,42,.92);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 body.fs .rotate{z-index:70}
+
+/* sound buttons */
+.snd{display:flex;gap:8px;justify-content:center}
+.snd-btn{white-space:nowrap;font-family:var(--display);font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.snd-btn[aria-pressed="false"]{color:var(--muted);background:transparent;text-decoration:line-through}
+.fs-bar{display:none}
+body.fs .fs-bar{display:flex;gap:8px;align-items:center;position:absolute;z-index:3;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom, 0px))}
+body.fs .fs-bar .snd-btn{background:rgba(18,12,42,.7);padding:7px 12px}
+
+/* test drive mode */
+.test-bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:12px 16px;border-radius:12px;background:repeating-linear-gradient(45deg,#2a2210,#2a2210 12px,#1f1a0c 12px,#1f1a0c 24px);border:2px dashed #ffd34d;color:var(--ink);font-size:14px}
+.test-bar b{font-family:var(--display);color:#ffd34d;font-size:17px}
+.test-bar span{flex:1;min-width:200px;color:#e8dcb8}
+body.testing .card .num::after{content:" · TEST";color:#ffd34d}
 
 /* leaderboard + records */
 .lbgrid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
@@ -258,7 +272,7 @@ window.FIREBASE_CONFIG = {
 </head><body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><h1>Relic Racer</h1><span>Miami nights · endless drive</span></div>
+    <div class="brand"><h1 id="brandTitle">Relic Racer</h1><span>Miami nights · endless drive</span></div>
     <div class="purse">
       <div class="chip" title="Coins to spend"><span class="coin-ic"></span><span id="hudCoins">0</span><small>coins</small></div>
       <div class="chip" title="Cars unlocked"><span id="hudOwned">1</span><small id="hudTotal">/ 100 found</small></div>
@@ -266,6 +280,7 @@ window.FIREBASE_CONFIG = {
     </div>
   </header>
 
+  <div class="test-bar" id="testBar" hidden><b>Test Drive mode</b><span>Every car is unlocked to try. Coins, chests, best scores and the leaderboard are paused.</span><button class="btn small" id="testOff" type="button">Exit test mode</button></div>
   <section class="acct" id="acct" aria-labelledby="acctH">
     <div class="acct-copy">
       <h2 id="acctH">Save your garage</h2>
@@ -291,7 +306,7 @@ window.FIREBASE_CONFIG = {
   </section>
 
   <section class="cabinet" aria-label="Game">
-    <div class="screen"><button class="fs-exit" id="fsExit" type="button">Exit</button><div class="over-cta" id="overCta" hidden>
+    <div class="screen"><div class="fs-bar"><button class="snd-btn" data-snd="music" type="button" aria-pressed="true">Music: On</button><button class="fs-exit" id="fsExit" type="button">Exit</button><button class="snd-btn" data-snd="sfx" type="button" aria-pressed="true">Sound: On</button></div><div class="over-cta" id="overCta" hidden>
       <div class="oc-card">
         <h3>Crashed! <span id="ocSum"></span></h3>
         <p>You're not signed in, so your coins and cars are only saved on this device. Sign up to save your progress, keep your coins, save your cars and get on today's leaderboard.</p>
@@ -303,6 +318,7 @@ window.FIREBASE_CONFIG = {
       <div class="runner-now"><canvas id="nowCv" width="112" height="64"></canvas><div>Driving <b id="nowName">—</b><br><span id="nowPerk"></span></div></div>
       <div class="keys"><kbd>Space</kbd>, <kbd>↑</kbd> or click to jump (hold for higher) · <kbd>P</kbd> pause</div>
       <div class="tap-hint">Tap the game to jump. Hold for a higher jump.</div>
+      <div class="snd"><button class="snd-btn" data-snd="music" type="button" aria-pressed="true">Music: On</button><button class="snd-btn" data-snd="sfx" type="button" aria-pressed="true">Sound: On</button></div>
     </div>
   </section>
 
@@ -624,7 +640,7 @@ function drawChar(ctx, c, o){
     if (pose !== "idle" || true){ const flick = Math.floor(t*16)%2; P(-half - 3 - flick, y0 + H - 3, 3 + flick, 2, "#ffd34d"); P(-half - 2, y0 + H - 3, 2, 1, "#ff6a2b"); }
   }
   if (ex.includes("x") && !sil){
-    const k = Math.floor(t*3) % 4; const sp = [[-6,0],[4,1],[10,0],[-12,1]][k];
+    const k = ((Math.floor(t*3) % 4) + 4) % 4 || 0; const sp = [[-6,0],[4,1],[10,0],[-12,1]][k];
     P(sp[0], y0 + bodyTop + sp[1], 1, 1, "#ffffff"); P(sp[0]-1, y0 + bodyTop + sp[1] + 1, 3, 1, "rgba(255,255,255,.6)");
   }
   // Mason behind the wheel, seen through the front window: hair, face, sunglasses, suit collar
@@ -757,10 +773,10 @@ function renderHUD(){
   $("recRuns").textContent = fmt(state.runs);
   $("recLife").textContent = fmt(state.lifetimeCoins);
   $("recChests").textContent = fmt(state.chests);
-  const c = CHARS[state.selected];
+  const c = curCar();
   $("nowName").textContent = c.name;
   $("nowName").style.color = TIERS[c.tier].color;
-  $("nowPerk").textContent = TIERS[c.tier].name;
+  $("nowPerk").textContent = TIERS[c.tier].name + (themeFor(c) ? " · " + themeFor(c).world : "");
   $("chestBar").style.width = Math.min(100, state.coins) + "%";
   const can = state.coins >= 100 && !chestBusy;
   $("openChest").disabled = !can;
@@ -780,9 +796,9 @@ function renderCards(){
   cardCanvases.length = 0;
   CHARS.forEach(c => {
     if (filter >= 0 && c.tier !== filter) return;
-    const own = !!state.owned[c.id], t = TIERS[c.tier];
+    const own = TEST.on || !!state.owned[c.id], t = TIERS[c.tier];
     const b = document.createElement("button"); b.type = "button";
-    b.className = "card" + (own ? "" : " locked") + (state.selected === c.id ? " sel" : "");
+    b.className = "card" + (own ? "" : " locked") + ((TEST.on ? TEST.car : state.selected) === c.id ? " sel" : "");
     b.style.setProperty("--rc", t.color);
     b.setAttribute("aria-label", own ? `${c.name}, ${t.name}${state.selected===c.id?", driving now":""}` : `Locked ${t.name} car`);
     const cv = document.createElement("canvas"); cv.width = 168; cv.height = 96;
@@ -798,10 +814,29 @@ function renderCards(){
     if (c.tier >= 4 && own) cardCanvases.push({ctx, c});
   });
 }
-function renderNow(){ const cv=$("nowCv"), ctx=setupCanvas(cv); ctx.clearRect(0,0,112,64); drawChar(ctx, CHARS[state.selected], {x:56,y:56,s:2.9,t:performance.now()/1000}); }
+function renderNow(){ const cv=$("nowCv"), ctx=setupCanvas(cv); ctx.clearRect(0,0,112,64); drawChar(ctx, curCar(), {x:56,y:56,s:2.9,t:performance.now()/1000}); }
 function renderAll(){ renderHUD(); renderOdds(); renderFilters(); renderCards(); renderNow(); renderAccount(); renderCode(); }
 
+/* ---------- Test Drive mode (secret) ----------
+   Tap the "Relic Racer" title 7 times fast, or type "testdrive" on a keyboard.
+   Lets you drive any car. Nothing in test mode touches real progress: no coins, no chests,
+   no best score, no leaderboard. It switches off when the page reloads. */
+const TEST = { on:false, car:0 };
+const curCar = () => TEST.on ? CHARS[TEST.car] : CHARS[state.selected];
+function setTest(on){
+  if (game.state === "running") endRun();
+  TEST.on = on; TEST.car = state.selected;
+  $("testBar").hidden = !on;
+  document.body.classList.toggle("testing", on);
+  renderAll(); toast(on ? "Test Drive mode on: every car unlocked" : "Test Drive mode off");
+}
+{ let taps = [];
+  $("brandTitle").addEventListener("click", () => { const now = Date.now(); taps = taps.filter(t => now - t < 2500); taps.push(now); if (taps.length >= 7){ taps = []; setTest(!TEST.on); } });
+  let typed = "";
+  document.addEventListener("keydown", e => { if (e.key.length !== 1 || /INPUT|TEXTAREA/.test(e.target.tagName)) return; typed = (typed + e.key.toLowerCase()).slice(-9); if (typed === "testdrive"){ typed = ""; setTest(!TEST.on); } });
+}
 function selectChar(id){
+  if (TEST.on){ TEST.car = id; renderHUD(); renderCards(); renderNow(); toast("Test driving the " + CHARS[id].name); return; }
   if (!state.owned[id] || state.selected === id) return;
   state.selected = id; Saves.save(); renderHUD(); renderCards(); renderNow();
   toast("Now driving the " + CHARS[id].name);
@@ -865,6 +900,124 @@ $("loadYes").addEventListener("click", () => {
   Saves.save(true); renderAll();
 });
 
+/* ============================== SOUND & MUSIC ==============================
+   Everything is synthesized with the Web Audio API: no audio files, nothing to license.
+   Browsers only allow sound after the player taps or presses a key, so the engine wakes up on the first input. */
+const Sound = (() => {
+  let ac = null, master, musicBus, sfxBus, noiseBuf, delay;
+  const prefs = { music: LS.get(PREFIX + "music") !== "off", sfx: LS.get(PREFIX + "sfx") !== "off" };
+  const MUSIC_VOL = .32, SFX_VOL = .55;
+  function wake(){
+    if (!ac){
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      try { ac = new C(); } catch { return null; }
+      master = ac.createGain(); master.gain.value = .9; master.connect(ac.destination);
+      musicBus = ac.createGain(); musicBus.gain.value = 0; musicBus.connect(master);
+      sfxBus = ac.createGain(); sfxBus.gain.value = prefs.sfx ? SFX_VOL : 0; sfxBus.connect(master);
+      // a soft echo for the arpeggio
+      delay = ac.createDelay(1); delay.delayTime.value = .43; const fb = ac.createGain(); fb.gain.value = .32;
+      const dl = ac.createGain(); dl.gain.value = .35; delay.connect(fb); fb.connect(delay); delay.connect(dl); dl.connect(musicBus);
+      noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    }
+    if (ac.state === "suspended") ac.resume().catch(() => {});
+    return ac;
+  }
+  function tone(f, dur, {type="square", vol=.3, at=0, slide=0, bus, attack=.005, cutoff=0}={}){
+    if (!ac) return; const t = ac.currentTime + at;
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    let node = o;
+    if (cutoff){ const f2 = ac.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = cutoff; o.connect(f2); node = f2; }
+    node.connect(g); g.connect(bus || sfxBus); o.start(t); o.stop(t + dur + .02);
+    return g;
+  }
+  function noise(dur, {vol=.3, at=0, hp=0, lp=0, bus}={}){
+    if (!ac) return; const t = ac.currentTime + at;
+    const s = ac.createBufferSource(); s.buffer = noiseBuf; let node = s;
+    if (hp){ const f = ac.createBiquadFilter(); f.type = "highpass"; f.frequency.value = hp; node.connect(f); node = f; }
+    if (lp){ const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = lp; node.connect(f); node = f; }
+    const g = ac.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    node.connect(g); g.connect(bus || sfxBus); s.start(t); s.stop(t + dur + .02);
+  }
+  const ok = () => ac && prefs.sfx;
+  const fx = {
+    jump(){ if (!ok()) return; tone(220, .16, {type:"square", vol:.18, slide:520, cutoff:2400}); },
+    coin(){ if (!ok()) return; tone(988, .07, {type:"square", vol:.12}); tone(1319, .16, {type:"square", vol:.12, at:.06}); },
+    round(){ if (!ok()) return; [523, 659, 784, 1047].forEach((f, i) => tone(f, .18, {type:"square", vol:.14, at:i*.08, cutoff:3000})); },
+    crash(){ if (!ok()) return; noise(.5, {vol:.5, lp:1400}); tone(140, .45, {type:"sawtooth", vol:.3, slide:40, cutoff:900}); tone(70, .3, {type:"sine", vol:.4, slide:35}); },
+    shake(){ if (!ok()) return; for (let i = 0; i < 9; i++) noise(.05, {vol:.22, at:i*.14, hp:1800}); for (let i = 0; i < 9; i++) tone(180 + (i%2)*40, .06, {type:"square", vol:.06, at:i*.14 + .02, cutoff:800}); },
+    reveal(tier){ if (!ok()) return;
+      noise(.35, {vol:.25, hp:3000});
+      const notes = [[523,659,784],[523,659,784,1047],[587,740,880,1175],[659,831,988,1319],[523,659,784,1047,1319,1568],[523,659,784,1047,1319,1568,2093]][tier] || [523,659,784];
+      notes.forEach((f, i) => tone(f, .5 + (tier >= 4 ? .4 : 0), {type: tier >= 3 ? "sawtooth" : "square", vol:.11, at:.08 + i*.09, cutoff: 2600 + tier*500}));
+      if (tier >= 4) for (let i = 0; i < 10; i++) tone(1800 + Math.random()*1600, .12, {type:"sine", vol:.06, at:.6 + i*.07});
+    },
+    click(){ if (!ok()) return; tone(660, .05, {type:"square", vol:.07}); },
+  };
+
+  /* ---- music: a looping synthwave track, 104 BPM, Am - F - C - G ---- */
+  const BPM = 104, STEP = 60 / BPM / 4;            // 16th notes
+  const CHORDS = [[57,60,64],[53,57,60],[48,52,55],[55,59,62]];   // MIDI: Am, F, C, G
+  const LEAD = [69,72,76,72, 69,72,76,79, 77,76,72,69, 72,71,67,64];
+  const hz = m => 440 * Math.pow(2, (m - 69)/12);
+  let playing = false, step = 0, nextT = 0, timer = null;
+  function schedule(){
+    while (nextT < ac.currentTime + .15){
+      const bar = Math.floor(step / 16) % 4, s = step % 16, ch = CHORDS[bar], at = nextT - ac.currentTime;
+      const B = musicBus;
+      // drums
+      if (s % 4 === 0){ tone(110, .22, {type:"sine", vol:.55, at, slide:40, bus:B}); }
+      if (s === 4 || s === 12){ noise(.18, {vol:.22, at, hp:1500, bus:B}); tone(190, .1, {type:"triangle", vol:.12, at, bus:B}); }
+      if (s % 2 === 0) noise(.04, {vol: s % 4 === 2 ? .09 : .05, at, hp:7000, bus:B});
+      // bass: driving eighths, octave bounce
+      if (s % 2 === 0){ const root = ch[0] - 24 + (s % 4 === 2 ? 12 : 0); tone(hz(root), STEP*1.8, {type:"sawtooth", vol:.16, at, cutoff:700, bus:B}); }
+      // pad at the start of each bar
+      if (s === 0) ch.forEach(n => { [-.06, .06].forEach(det => { const g = tone(hz(n) * (1 + det/100), STEP*16, {type:"sawtooth", vol:.035, at, attack:.4, cutoff:1300, bus:B}); }); });
+      // arpeggio into the echo
+      if (s % 2 === 1){ const n = ch[(s >> 1) % 3] + 12; const g = tone(hz(n), STEP*1.4, {type:"square", vol:.05, at, cutoff:2500, bus:B}); if (g) g.connect(delay); }
+      // simple lead every other loop
+      if (Math.floor(step / 64) % 2 === 1 && s % 4 === 0){ tone(hz(LEAD[(bar*4 + s/4) % 16]), STEP*3.5, {type:"triangle", vol:.09, at, cutoff:3000, bus:B}); }
+      step++; nextT += STEP;
+    }
+  }
+  function musicTarget(){ return prefs.music && playing ? MUSIC_VOL : 0; }
+  function fadeMusic(to, secs){ if (!ac) return; const t = ac.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setValueAtTime(musicBus.gain.value, t); musicBus.gain.linearRampToValueAtTime(to, t + secs); }
+  function musicStart(){
+    if (!wake()) return;
+    if (!playing){ playing = true; step = 0; nextT = ac.currentTime + .08; clearInterval(timer); timer = setInterval(schedule, 25); }
+    fadeMusic(musicTarget(), .6);
+  }
+  function musicStop(){
+    if (!ac || !playing) return;
+    fadeMusic(0, 1.2); playing = false;
+    clearTimeout(musicStop.t); musicStop.t = setTimeout(() => { if (!playing) clearInterval(timer); }, 1300);
+  }
+  function duck(on){ if (ac && playing) fadeMusic(on ? musicTarget()*.35 : musicTarget(), .3); }
+  function setMusic(on){ prefs.music = on; LS.set(PREFIX + "music", on ? "on" : "off"); if (ac) fadeMusic(musicTarget(), .3); renderSoundButtons(); }
+  function setSfx(on){ prefs.sfx = on; LS.set(PREFIX + "sfx", on ? "on" : "off"); if (ac) sfxBus.gain.value = on ? SFX_VOL : 0; renderSoundButtons(); }
+  document.addEventListener("visibilitychange", () => { if (!ac) return; if (document.hidden) ac.suspend().catch(()=>{}); else ac.resume().catch(()=>{}); });
+  // first touch or key anywhere unlocks audio (iPhone needs this)
+  const unlock = () => wake();
+  ["pointerdown","touchend","keydown"].forEach(ev => document.addEventListener(ev, unlock, {passive:true}));
+  return Object.assign(fx, { prefs, wake, musicStart, musicStop, duck, setMusic, setSfx });
+})();
+function renderSoundButtons(){
+  document.querySelectorAll("[data-snd]").forEach(b => {
+    const kind = b.dataset.snd, on = Sound.prefs[kind];
+    b.setAttribute("aria-pressed", on);
+    b.textContent = (kind === "music" ? "Music" : "Sound") + (on ? ": On" : ": Off");
+  });
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-snd]"); if (!b) return;
+  e.stopPropagation();
+  if (b.dataset.snd === "music") Sound.setMusic(!Sound.prefs.music); else Sound.setSfx(!Sound.prefs.sfx);
+  if (Sound.prefs.sfx) Sound.click();
+  b.blur();
+});
+
 /* ============================== TREASURE CHEST ============================== */
 let chestBusy = false, lastPull = null;
 const chestCtx = setupCanvas($("chestCv"));
@@ -889,7 +1042,9 @@ function rollChar(){
 const cfChestCtx = setupCanvas($("cfChest")), cfCharCtx = setupCanvas($("cfChar"));
 let cfOpen = false, cfRevealed = false;
 function openChest(){
+  if (TEST.on){ toast("Chests are paused in Test Drive mode"); return; }
   if (chestBusy || state.coins < 100) return;
+  Sound.wake(); Sound.shake();
   chestBusy = true; state.coins -= 100; state.chests++;
   const c = rollChar(), isNew = !state.owned[c.id], t = TIERS[c.tier];
   state.owned[c.id] = (state.owned[c.id]||0) + 1;
@@ -904,9 +1059,9 @@ function openChest(){
   cfOpen = true; cfRevealed = false; document.body.style.overflow = "hidden";
   $("cfTier").textContent = t.name; $("cfTier").style.color = t.color;
   $("cfName").textContent = c.name; $("cfName").style.color = c.tier >= 3 ? t.color : "var(--ink)";
-  $("cfNote").textContent = isNew ? `New car! #${String(c.id+1).padStart(3,"0")} of ${CHARS.length}` : `You already had this one · +${t.refund} coins back`;
+  $("cfNote").textContent = (themeFor(c) ? `Unlocks the ${themeFor(c).world} world · ` : "") + (isNew ? `New car! #${String(c.id+1).padStart(3,"0")} of ${CHARS.length}` : `You already had this one · +${t.refund} coins back`);
   setTimeout(() => {
-    el.classList.remove("shaking"); el.classList.add("revealed"); cfRevealed = true;
+    el.classList.remove("shaking"); el.classList.add("revealed"); cfRevealed = true; Sound.reveal(c.tier);
     $("cfRun").hidden = state.selected === c.id;
     $("cfAgain").hidden = state.coins < 100;
     $("cfAgain").textContent = "Open another · 100";
@@ -921,6 +1076,7 @@ function closeChest(){
   document.body.style.overflow = "";
 }
 $("openChest").addEventListener("click", openChest);
+$("testOff").addEventListener("click", () => setTest(false));
 $("cfClose").addEventListener("click", closeChest);
 $("cfAgain").addEventListener("click", () => { cfOpen = false; openChest(); });
 $("cfRun").addEventListener("click", () => { if (lastPull) selectChar(lastPull.id); closeChest(); });
@@ -965,7 +1121,7 @@ function enterFS(){
 }
 function exitFS(){
   if (!document.body.classList.contains("fs")) return;
-  if (game.state === "running") game.paused = true;
+  if (game.state === "running"){ game.paused = true; Sound.duck(true); }
   document.body.classList.remove("fs"); document.body.style.overflow = "";
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch {}
   requestAnimationFrame(sizeGame);
@@ -982,20 +1138,23 @@ const SKY_NEAR = Array.from({length:16}, (_, i) => ({w: 26 + Math.floor(rnd()*30
 const game = {
   state:"ready", t:0, speed:0, dist:0, round:1, roundDist:0, runCoins:0,
   py:0, vy:0, onGround:true, jumpHeld:false,
-  obs:[], coins:[], parts:[], nextObs:0, nextCoin:0, banner:null, flash:0, paused:false,
+  obs:[], coins:[], parts:[], smoke:[], nextObs:0, nextCoin:0, banner:null, flash:0, paused:false,
 };
 const stars = Array.from({length:70},()=>({x:Math.random()*1000, y:Math.random()*140, s:Math.random()<.2?2:1, p:Math.random()*6}));
 function resetRun(){
-  Object.assign(game, {t:0, speed:320, dist:0, round:1, roundDist:0, runCoins:0, py:0, vy:0, onGround:true, obs:[], coins:[], parts:[], nextObs:420, nextCoin:260, banner:{text:"Round 1", sub:"Go!", t:1.6}, flash:0, paused:false});
+  Object.assign(game, {t:0, speed:320, dist:0, round:1, roundDist:0, runCoins:0, py:0, vy:0, onGround:true, obs:[], coins:[], parts:[], smoke:[], nextObs:420, nextCoin:260, banner:{text:"Round 1", sub: themeFor(curCar()) ? themeFor(curCar()).world : (TEST.on ? "Test drive" : "Go!"), t:1.8}, flash:0, paused:false});
 }
 function startRun(){
-  resetRun(); game.state = "running"; $("overCta").hidden = true;
+  resetRun(); game.state = "running"; $("overCta").hidden = true; Sound.musicStart();
   // Bring the whole game screen and buttons into view when a run starts
   if (!document.body.classList.contains("fs")) { const r = document.querySelector(".cabinet").getBoundingClientRect(); if (r.top < 0 || r.bottom > window.innerHeight) document.querySelector(".cabinet").scrollIntoView({behavior:"smooth", block: r.height > window.innerHeight ? "start" : "center"}); }
 }
 function endRun(){
+  Sound.musicStop();
   game.state = "over"; game.overT = game.t;
-  state.runs++; const d = Math.floor(game.dist);
+  const d = Math.floor(game.dist);
+  if (TEST.on){ game.newBest = false; return; }
+  state.runs++;
   const newBest = d > state.best;
   if (newBest) state.best = d;
   if (game.round > state.bestRound) state.bestRound = game.round;
@@ -1010,9 +1169,9 @@ function endRun(){
 function jumpPress(){
   enterFS();
   if (game.state !== "running"){ if (game.state==="over" && game.t - game.overT < .6) return; startRun(); return; }
-  if (game.paused){ game.paused = false; return; }
+  if (game.paused){ game.paused = false; Sound.duck(false); return; }
   game.jumpHeld = true;
-  if (game.onGround){ game.vy = -640; game.onGround = false; }
+  if (game.onGround){ game.vy = -640; game.onGround = false; Sound.jump(); }
 }
 function jumpRelease(){ game.jumpHeld = false; if (game.vy < -300) game.vy = -300; }
 
@@ -1063,16 +1222,16 @@ function update(dt){
   game.t += dt;
   if (game.banner){ game.banner.t -= dt; if (game.banner.t <= 0) game.banner = null; }
   if (game.flash > 0) game.flash -= dt;
-  const c = CHARS[state.selected];
-  if (game.state !== "running" || game.paused){ game.parts.forEach(p=>{p.life-=dt}); game.parts = game.parts.filter(p=>p.life>0); return; }
+  const c = curCar();
+  if (game.state !== "running" || game.paused){ game.parts.forEach(p=>{p.life-=dt}); game.parts = game.parts.filter(p=>p.life>0); if (!game.paused && game.state === "ready") emitSmoke(c, dt, false); updateSmoke(dt); return; }
   // speed & distance
   game.speed = 320 + (game.round-1)*40 + Math.min(90, game.roundDist*0.15);
   const dx = game.speed*dt;
   game.dist += dx/10; game.roundDist += dx/10;
   // round complete
   if (game.roundDist >= ROUND_LEN(game.round)){
-    const bonus = 2*game.round;
-    state.coins += bonus; state.lifetimeCoins += bonus; game.runCoins += bonus;
+    const bonus = 2*game.round; Sound.round();
+    if (!TEST.on){ state.coins += bonus; state.lifetimeCoins += bonus; } game.runCoins += bonus;
     game.round++; game.roundDist = 0;
     game.banner = {text:"Round " + game.round, sub:"+" + bonus + " coin round bonus", t:2};
     game.flash = .25; Saves.save(); renderHUD();
@@ -1089,29 +1248,30 @@ function update(dt){
   const pbox = {x:PX-25, y:GROUND+game.py-22, w:50, h:20};   // the car
   for (const o of game.obs){
     const ob = {x:o.x+3, y:o.y+3, w:o.w-6, h:o.h-5};
-    if (hit(pbox, ob)){ burst(PX+18, GROUND+game.py-10, "#ffd34d", 22); burst(PX, GROUND+game.py-10, "#ff4fa3", 10); game.flash = .3; endRun(); return; }
+    if (hit(pbox, ob)){ burst(PX+18, GROUND+game.py-10, "#ffd34d", 22); burst(PX, GROUND+game.py-10, "#ff4fa3", 10); game.flash = .3; Sound.crash(); endRun(); return; }
   }
   // coins
   game.coins = game.coins.filter(k=>{
     if (k.x < -20) return false;
     if (hit(pbox,{x:k.x-k.r,y:k.y-k.r,w:k.r*2,h:k.r*2})){
       const v = 1;
-      state.coins += v; state.lifetimeCoins += v; game.runCoins += v;
+      if (!TEST.on){ state.coins += v; state.lifetimeCoins += v; } game.runCoins += v; Sound.coin();
       burst(k.x,k.y, "#ffe08a", 5);
       renderHUD(); return false;
     }
     return true;
   });
   // trail for legendary+
-  if (c.tier >= 4 && Math.random() < .7){
-    const col = c.tier===5 ? `hsl(${(game.t*200)%360},90%,65%)` : TIERS[4].color;
+  emitSmoke(c, dt, true); updateSmoke(dt);
+  if (c.tier === 4 && Math.random() < .7){
+    const col = TIERS[4].color;
     game.parts.push({x:PX-34, y:GROUND+game.py-6-Math.random()*8, vx:-dx/dt*0.3-40, vy:(Math.random()-.5)*30, life:.4, col, sz:2});
   }
   game.parts.forEach(p=>{ p.x += p.vx*dt; p.y += p.vy*dt; if(!p.txt) p.vy += 300*dt; p.life -= dt; });
   game.parts = game.parts.filter(p=>p.life>0);
 }
 
-function drawBG(){
+function drawCityBG(){
   const sky = ROUND_SKIES[(game.round-1) % ROUND_SKIES.length];
   const gr = ctx.createLinearGradient(0,0,0,GROUND); gr.addColorStop(0,sky[0]); gr.addColorStop(.62,sky[1]); gr.addColorStop(1,sky[2]);
   ctx.fillStyle = gr; ctx.fillRect(0,0,GW,GH);
@@ -1160,6 +1320,174 @@ function drawBG(){
   ctx.fillStyle = "rgba(45,226,230,.05)"; for (let x = -(scroll*.5 % 90); x < GW; x += 90) ctx.fillRect(Math.floor(x), GROUND+6, 30, 1);
   ctx.fillStyle = "rgba(255,79,163,.05)"; for (let x = -(scroll*.5 % 70) + 30; x < GW; x += 70) ctx.fillRect(Math.floor(x), GROUND+28, 24, 1);
 }
+function drawBG(){
+  const th = themeFor(curCar());
+  if (th) WORLD_DRAW[th.world](game.dist*10); else drawCityBG();
+}
+/* ============================== MYTHIC WORLDS ==============================
+   Each Mythic car replaces the Miami city with its own world and gets its own exhaust smoke.
+   Keys are car names so the list stays correct if cars are ever added. */
+const THEMES = {
+  "Felari Inferno":       { world:"Volcano Night",     smoke:["#ff6a1a","#c4361a","#5a2a22"], spark:"#ffd34d" },
+  "Landoni Neon Phantom": { world:"Synthwave Grid",    smoke:["#ff4fa3","#a04fff","#4a2a6a"], spark:null },
+  "Bugotti Solar Crown":  { world:"Golden Hour",       smoke:["#ffd34d","#f2a33a","#8a6a3a"], spark:"#fff3b0" },
+  "Teslo Hover-X":        { world:"Neo City 2099",     smoke:["#2de2e6","#7ff3ff","#2a5a6a"], spark:null },
+  "Hundahi Elytra":       { world:"Night Race Circuit",smoke:["#4a8cff","#9fc4ff","#3a4a6a"], spark:"#ffffff" },
+};
+const themeFor = c => THEMES[c.name] || null;
+
+function skyGrad(top, mid, low){ const g = ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,top); g.addColorStop(.6,mid); g.addColorStop(1,low); ctx.fillStyle = g; ctx.fillRect(0,0,GW,GH); }
+function roadBand(c1, c2){ const bot = Math.min(GH, GROUND + 40); const g = ctx.createLinearGradient(0,GROUND,0,bot); g.addColorStop(0,c1); g.addColorStop(1,c2); ctx.fillStyle = g; ctx.fillRect(0, GROUND+1, GW, bot-GROUND); return bot; }
+function dashes(scroll, col, y, len, gap){ ctx.fillStyle = col; const off = scroll % gap; for (let x = -off; x < GW; x += gap) ctx.fillRect(Math.floor(x), GROUND + (y||18), len||22, 3); }
+function loopX(scroll, speed, span){ return -((scroll*speed) % span); }
+
+const WORLD_DRAW = {
+  "Volcano Night"(scroll){
+    skyGrad("#120608", "#3a0f12", "#7a2a1a");
+    // rising embers
+    stars.forEach(st => { const y = ((st.y*4 - game.t*(18 + st.s*14)) % (GROUND)) ; const yy = y < 0 ? y + GROUND : y;
+      ctx.fillStyle = `rgba(255,${120 + st.s*40},40,${.25 + .2*Math.sin(game.t*3+st.p)})`; ctx.fillRect(Math.floor((st.x - scroll*.04 + GW*10) % GW), yy, st.s, st.s); });
+    // volcanoes with lava streaks
+    const span = 320, off = loopX(scroll, .07, span);
+    for (let x = off - span; x < GW + span; x += span){
+      const cx = x + 160, top = GROUND - 120;
+      ctx.fillStyle = "#2a0c0c"; ctx.beginPath(); ctx.moveTo(cx-120, GROUND-8); ctx.lineTo(cx-18, top); ctx.lineTo(cx+18, top); ctx.lineTo(cx+120, GROUND-8); ctx.fill();
+      ctx.fillStyle = `rgba(255,110,40,${.35 + .15*Math.sin(game.t*2 + x)})`; ctx.fillRect(cx-16, top, 32, 3);
+      ctx.fillStyle = "rgba(255,90,30,.35)"; for (let i = 0; i < 26; i++){ ctx.fillRect(Math.floor(cx - 10 + i*.9 - (i%3)), top + 3 + i*3, 2, 3); ctx.fillRect(Math.floor(cx + 6 + i*1.6), top + 6 + i*3, 2, 3); }
+      for (let k = 0; k < 5; k++){ const ph = (game.t*.25 + k/5) % 1; ctx.fillStyle = `rgba(110,50,45,${.22*(1-ph)})`; ctx.beginPath(); ctx.arc(cx + ph*30 + Math.sin(k)*4, top - 6 - ph*70, 6 + ph*18, 0, Math.PI*2); ctx.fill(); }
+    }
+    // near jagged rocks
+    const off2 = loopX(scroll, .22, 90); ctx.fillStyle = "#1a0808";
+    for (let x = off2 - 90; x < GW + 90; x += 90){ ctx.beginPath(); ctx.moveTo(x, GROUND-6); ctx.lineTo(x+18, GROUND-34); ctx.lineTo(x+30, GROUND-22); ctx.lineTo(x+46, GROUND-44); ctx.lineTo(x+64, GROUND-18); ctx.lineTo(x+90, GROUND-6); ctx.fill(); }
+    ctx.fillStyle = "#2a1414"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "#a8441a"; ctx.fillRect(0, GROUND-1, GW, 2);
+    const bot = roadBand("#1c1414", "#0d0909");
+    // glowing lava cracks in the road
+    ctx.fillStyle = `rgba(255,100,30,${.35 + .12*Math.sin(game.t*3)})`;
+    for (let x = loopX(scroll, 1, 130); x < GW; x += 130){ ctx.fillRect(Math.floor(x), GROUND+8, 10, 1); ctx.fillRect(Math.floor(x)+10, GROUND+9, 6, 1); ctx.fillRect(Math.floor(x)+40, GROUND+30, 12, 1); ctx.fillRect(Math.floor(x)+52, GROUND+29, 5, 1); }
+    dashes(scroll, "rgba(255,170,80,.45)");
+    if (GH - bot > 8){ const g = ctx.createLinearGradient(0,bot,0,GH); g.addColorStop(0,"#3a120a"); g.addColorStop(1,"#120606"); ctx.fillStyle = g; ctx.fillRect(0,bot,GW,GH-bot);
+      ctx.fillStyle = "rgba(255,110,40,.25)"; for (let r = 0; r < (GH-bot)/12; r++){ const o = (scroll*.3*(1+r*.2) + r*41) % 80; for (let x = -o; x < GW; x += 80) ctx.fillRect(Math.floor(x), bot + 8 + r*12, 26, 2); } }
+  },
+  "Synthwave Grid"(scroll){
+    skyGrad("#07051a", "#1e0c3a", "#4a1a5a");
+    stars.forEach(st => { ctx.fillStyle = `rgba(255,230,255,${.15+.15*Math.sin(game.t*2+st.p)})`; ctx.fillRect(Math.floor((st.x - scroll*.01 + GW*10)%GW), st.y/140*(GROUND-110), st.s, st.s); });
+    // big striped sun, soft
+    const sx = GW*.62, sy = GROUND - 30, r = 62;
+    ctx.save(); ctx.beginPath(); ctx.arc(sx, sy, r, Math.PI, 0); ctx.clip();
+    const g = ctx.createLinearGradient(0, sy-r, 0, sy); g.addColorStop(0, "rgba(255,210,110,.75)"); g.addColorStop(1, "rgba(255,70,150,.7)"); ctx.fillStyle = g; ctx.fillRect(sx-r, sy-r, r*2, r);
+    ctx.fillStyle = "#1e0c3a"; for (let i = 0; i < 6; i++) ctx.fillRect(sx-r, sy - r*.55 + i*(r*.09 + i*1.2), r*2, 2 + i*1.4);
+    ctx.restore();
+    // wireframe mountains
+    const span = 260, off = loopX(scroll, .1, span);
+    for (let x = off - span; x < GW + span; x += span){
+      const pts = [[0,0],[40,-46],[70,-26],[110,-70],[150,-30],[190,-54],[230,-18],[260,0]];
+      ctx.fillStyle = "#120a26"; ctx.beginPath(); ctx.moveTo(x, GROUND-6); pts.forEach(([px,py]) => ctx.lineTo(x+px, GROUND-6+py)); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "rgba(45,226,230,.45)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, GROUND-6); pts.forEach(([px,py]) => ctx.lineTo(x+px, GROUND-6+py)); ctx.stroke();
+      ctx.strokeStyle = "rgba(45,226,230,.15)"; for (let k = 1; k < pts.length-1; k++){ ctx.beginPath(); ctx.moveTo(x+pts[k][0], GROUND-6+pts[k][1]); ctx.lineTo(x+pts[k][0] + 8, GROUND-6); ctx.stroke(); }
+    }
+    ctx.fillStyle = "#0e0820"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "rgba(45,226,230,.6)"; ctx.fillRect(0, GROUND-1, GW, 2);
+    const bot = roadBand("#0c0718", "#07040f");
+    // neon grid on the road and below it
+    ctx.fillStyle = "rgba(255,79,163,.28)";
+    for (let y = GROUND + 10; y < GH; y += Math.max(6, (y - GROUND) * .35)) ctx.fillRect(0, Math.floor(y), GW, 1);
+    for (let x = loopX(scroll, 1, 32); x < GW; x += 32) ctx.fillRect(Math.floor(x), GROUND+1, 1, GH - GROUND);
+  },
+  "Golden Hour"(scroll){
+    skyGrad("#1a1a3a", "#7a3a3a", "#d98a3a");
+    // low sun
+    ctx.save(); ctx.shadowColor = "rgba(255,200,100,.4)"; ctx.shadowBlur = 24; ctx.fillStyle = "rgba(255,214,120,.85)"; ctx.beginPath(); ctx.arc(GW*.3, GROUND-40, 26, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    // long glowing clouds
+    for (let i = 0; i < 4; i++){ const o = (scroll*(.02 + i*.01) + i*170) % (GW + 200); ctx.fillStyle = `rgba(255,${170+i*15},${130+i*10},.22)`; ctx.fillRect(Math.floor(GW - o), 30 + i*22, 120 - i*12, 3); ctx.fillRect(Math.floor(GW - o) + 20, 33 + i*22, 70, 2); }
+    // elegant skyline with gold trim
+    const span = SKY_NEAR.reduce((t,b) => t + b.w + 6, 0), off = (scroll*.15) % span;
+    for (let rep = 0; rep < 3; rep++){ let x = -off + rep*span;
+      SKY_NEAR.forEach(bd => { if (x < GW && x + bd.w > 0){ const top = GROUND-8-bd.h*.9, X = Math.floor(x);
+        ctx.fillStyle = "#2a1a1a"; ctx.fillRect(X, top, bd.w, bd.h+8); ctx.fillStyle = "rgba(255,200,90,.55)"; ctx.fillRect(X, top, bd.w, 1); ctx.fillRect(X + Math.floor(bd.w/2) - 1, top - 6, 2, 6);
+        for (let wy = top+6; wy < GROUND-12; wy += 7) for (let wx = X+3; wx < X+bd.w-3; wx += 6) if (((wx*5 + wy*11 + bd.seed*13) % 9) < 2){ ctx.fillStyle = "rgba(255,210,140,.3)"; ctx.fillRect(wx, wy, 2, 2); } }
+        x += bd.w + 6; }); }
+    const palmGap = 170, pOff = (scroll*.45) % palmGap; for (let px = -pOff - 20; px < GW + 40; px += palmGap) drawPalm(Math.floor(px), GROUND-4);
+    ctx.fillStyle = "#3a2a22"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "#c9a04a"; ctx.fillRect(0, GROUND-1, GW, 2);
+    const bot = roadBand("#2a2228", "#16121a");
+    dashes(scroll, "rgba(255,210,110,.55)");
+    if (GH - bot > 8){ const g = ctx.createLinearGradient(0,bot,0,GH); g.addColorStop(0,"#5a3a2a"); g.addColorStop(1,"#1a1420"); ctx.fillStyle = g; ctx.fillRect(0,bot,GW,GH-bot);
+      for (let r = 0; r < (GH-bot)/9; r++){ const w = 30 - r*1.5 + Math.sin(game.t*2+r)*4; ctx.fillStyle = `rgba(255,214,120,${Math.max(.04,.3 - r*.02)})`; ctx.fillRect(Math.floor(GW*.3 - w/2), bot + 6 + r*9, Math.max(3,w), 2); } }
+  },
+  "Neo City 2099"(scroll){
+    skyGrad("#03101a", "#08243a", "#0f3a48");
+    // aurora
+    for (let b = 0; b < 3; b++){ ctx.fillStyle = `rgba(${80+b*40},255,${200-b*30},.07)`; for (let x = 0; x < GW; x += 4){ const y = 30 + b*16 + Math.sin(x/40 + game.t*.6 + b)*10; ctx.fillRect(x, y, 4, 14); } }
+    stars.forEach(st => { ctx.fillStyle = `rgba(200,255,255,${.12+.12*Math.sin(game.t*2+st.p)})`; ctx.fillRect(Math.floor((st.x - scroll*.01 + GW*10)%GW), st.y/140*(GROUND-130), 1, 1); });
+    // tall towers with light strips and blinking beacons
+    const span = SKY_FAR.reduce((t,b) => t + b.w + 8, 0), off = (scroll*.12) % span;
+    for (let rep = 0; rep < 3; rep++){ let x = -off + rep*span;
+      SKY_FAR.forEach(bd => { if (x < GW && x + bd.w > 0){ const h = bd.h*1.7, top = GROUND-10-h, X = Math.floor(x), w = Math.max(14, bd.w*.7);
+        ctx.fillStyle = "#06141e"; ctx.fillRect(X, top, w, h+10); ctx.fillRect(X + w/2 - 1, top - 12, 2, 12);
+        ctx.fillStyle = "rgba(45,226,230,.28)"; ctx.fillRect(X + 3, top + 6, 1, h - 10); ctx.fillRect(X + w - 4, top + 6, 1, h - 10);
+        if (Math.floor(game.t*1.5 + bd.seed) % 2) { ctx.fillStyle = "rgba(255,80,80,.7)"; ctx.fillRect(X + w/2 - 1, top - 13, 2, 2); } }
+        x += bd.w + 8; }); }
+    // flying cars
+    for (let i = 0; i < 6; i++){ const dir = i % 2 ? 1 : -1, sp = 30 + i*9, y = 50 + i*18; const x = ((game.t*sp*dir + i*97) % (GW+40) + GW + 40) % (GW+40) - 20;
+      ctx.fillStyle = "rgba(255,240,200,.55)"; ctx.fillRect(Math.floor(x), y, 3, 1); ctx.fillStyle = "rgba(255,60,90,.45)"; ctx.fillRect(Math.floor(x) - dir*3, y, 2, 1); }
+    ctx.fillStyle = "#0a1a26"; ctx.fillRect(0, GROUND-6, GW, 6); ctx.fillStyle = "rgba(45,226,230,.55)"; ctx.fillRect(0, GROUND-1, GW, 2);
+    const bot = roadBand("#0c1822", "#060e16");
+    ctx.fillStyle = "rgba(45,226,230,.4)"; ctx.fillRect(0, GROUND+19, GW, 1);
+    dashes(scroll, "rgba(127,243,255,.35)", 17, 14, 30);
+    if (GH - bot > 8){ ctx.fillStyle = "#040a10"; ctx.fillRect(0,bot,GW,GH-bot);
+      ctx.fillStyle = "#0a1620"; for (let x = loopX(scroll, 1, 120); x < GW; x += 120) ctx.fillRect(Math.floor(x)+50, bot, 12, GH-bot);
+      for (let i = 0; i < 60; i++){ const x = (i*53 - scroll*.2) % GW, y = bot + 14 + (i*29) % Math.max(10, GH-bot-14); ctx.fillStyle = i%3 ? "rgba(45,226,230,.18)" : "rgba(255,210,140,.16)"; ctx.fillRect(Math.floor((x+GW)%GW), y, 2, 1); } }
+  },
+  "Night Race Circuit"(scroll){
+    skyGrad("#050a1c", "#0c1a3a", "#1a2c55");
+    stars.forEach(st => { ctx.fillStyle = `rgba(220,230,255,${.12+.12*Math.sin(game.t*2+st.p)})`; ctx.fillRect(Math.floor((st.x - scroll*.01 + GW*10)%GW), st.y/140*(GROUND-130), 1, 1); });
+    // floodlight towers with soft light cones
+    const fl = 220, fo = loopX(scroll, .2, fl);
+    for (let x = fo - fl; x < GW + fl; x += fl){ const tx = Math.floor(x + 60), top = GROUND - 150;
+      ctx.fillStyle = "rgba(220,230,255,.05)"; ctx.beginPath(); ctx.moveTo(tx-6, top+6); ctx.lineTo(tx+6, top+6); ctx.lineTo(tx+70, GROUND-40); ctx.lineTo(tx-70, GROUND-40); ctx.fill();
+      ctx.fillStyle = "#0a0f20"; ctx.fillRect(tx-1, top, 3, 150);
+      ctx.fillStyle = "rgba(235,240,255,.7)"; for (let i = 0; i < 4; i++) ctx.fillRect(tx - 7 + i*4, top - 2, 3, 3); }
+    // grandstand with crowd and camera flashes
+    const gs = GROUND - 62, gOff = loopX(scroll, .32, 8);
+    ctx.fillStyle = "#121a30"; ctx.fillRect(0, gs, GW, 56);
+    ctx.fillStyle = "#1a2442"; for (let r = 0; r < 7; r++) ctx.fillRect(0, gs + 4 + r*7, GW, 1);
+    for (let r = 0; r < 7; r++) for (let x = gOff + (r%2)*4; x < GW; x += 8){ const seed = Math.abs(Math.floor((x - gOff + scroll*.32) / 8) * 13 + r*7) % 5;
+      ctx.fillStyle = ["#3a3a5a","#4a3a4a","#2a3a5a","#4a4a3a","#3a4a5a"][seed]; ctx.fillRect(Math.floor(x), gs + 1 + r*7, 3, 3); }
+    for (let i = 0; i < 4; i++){ if (Math.random() < .05){ ctx.fillStyle = "rgba(255,255,255,.6)"; ctx.fillRect(Math.floor(Math.random()*GW), gs + 2 + Math.floor(Math.random()*7)*7, 2, 2); } }
+    // sponsor-style banner blocks (no words)
+    const bo = loopX(scroll, .45, 120); for (let x = bo; x < GW; x += 120){ ctx.fillStyle = "#1f3f9e"; ctx.fillRect(Math.floor(x), GROUND-10, 50, 4); ctx.fillStyle = "#c2273a"; ctx.fillRect(Math.floor(x)+60, GROUND-10, 50, 4); }
+    // red and white kerbs
+    for (let x = loopX(scroll, 1, 20); x < GW; x += 20){ ctx.fillStyle = "#b8283a"; ctx.fillRect(Math.floor(x), GROUND-4, 10, 4); ctx.fillStyle = "#d9dbe3"; ctx.fillRect(Math.floor(x)+10, GROUND-4, 10, 4); }
+    const bot = roadBand("#2a2d38", "#191b24");
+    ctx.fillStyle = "rgba(230,232,240,.55)"; ctx.fillRect(0, GROUND+2, GW, 1); ctx.fillRect(0, GROUND+36, GW, 1);
+    // checkered line every so often
+    const cl = 900, cx = loopX(scroll, 1, cl) + 400;
+    for (let r = 0; r < 6; r++) for (let k = 0; k < 2; k++){ ctx.fillStyle = (r + k) % 2 ? "rgba(230,232,240,.7)" : "rgba(20,20,26,.8)"; ctx.fillRect(Math.floor(cx) + k*5, GROUND + 4 + r*5, 5, 5); }
+    if (GH - bot > 8){ ctx.fillStyle = "#0e2418"; ctx.fillRect(0, bot, GW, GH-bot);
+      for (let x = loopX(scroll, 1, 40); x < GW; x += 40){ ctx.fillStyle = "rgba(40,90,60,.35)"; ctx.fillRect(Math.floor(x), bot, 20, GH-bot); }
+      for (let x = loopX(scroll, 1, 20); x < GW; x += 20){ ctx.fillStyle = "#b8283a"; ctx.fillRect(Math.floor(x), bot, 10, 3); ctx.fillStyle = "#d9dbe3"; ctx.fillRect(Math.floor(x)+10, bot, 10, 3); } }
+  },
+};
+
+/* exhaust smoke: colored puffs from the back of a Mythic */
+function emitSmoke(c, dt, moving){
+  const th = themeFor(c); if (!th) return;
+  const spec = BODIES[c.body], half = Math.floor(spec.rows[0].length/2) * 2.3 * 0.85;
+  const rate = moving ? 40 : 8;
+  game.smokeAcc = (game.smokeAcc || 0) + dt*rate;
+  while (game.smokeAcc >= 1){
+    game.smokeAcc--;
+    const col = th.smoke[Math.floor(Math.random()*th.smoke.length)];
+    game.smoke.push({x: PX - half + 2, y: GROUND + game.py - 8 - Math.random()*3, vx: moving ? -(game.speed*.35) - Math.random()*40 : -20 - Math.random()*15,
+      vy: -10 - Math.random()*18, life: .7 + Math.random()*.4, max: 1.1, r: 2 + Math.random()*2, col});
+    if (th.spark && Math.random() < .25) game.smoke.push({x: PX - half, y: GROUND + game.py - 8, vx: -(moving ? game.speed*.5 : 30) - Math.random()*60, vy: -30 - Math.random()*40, life: .4, max: .4, r: 1, col: th.spark, spark: true});
+  }
+}
+function updateSmoke(dt){ game.smoke.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy *= .98; p.life -= dt; if (!p.spark) p.r += dt*9; }); game.smoke = game.smoke.filter(p => p.life > 0); }
+function drawSmoke(){
+  game.smoke.forEach(p => { ctx.globalAlpha = Math.max(0, p.life / p.max) * (p.spark ? .9 : .45); ctx.fillStyle = p.col;
+    const s = Math.round(p.r*2); ctx.fillRect(Math.round(p.x - s/2), Math.round(p.y - s/2), s, s); });
+  ctx.globalAlpha = 1;
+}
+
 // Below the road on tall phone screens: promenade, sand and the moonlit ocean
 function drawBeach(top, scroll){
   ctx.fillStyle = "#2a1a44"; ctx.fillRect(0, top, GW, 6);
@@ -1246,8 +1574,9 @@ function draw(){
   drawBG();
   game.obs.forEach(drawObs);
   game.coins.forEach(drawCoin);
-  const c = CHARS[state.selected];
+  const c = curCar();
   const pose = game.state !== "running" ? "idle" : (!game.onGround ? "jump" : "run");
+  drawSmoke();
   ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(PX-30, GROUND, 60, 3);
   drawChar(ctx, c, {x:PX, y:GROUND+game.py, s:2.3, t:game.t, pose});
   game.parts.forEach(p=>{ ctx.globalAlpha = Math.max(0,Math.min(1,p.life*2)); if (p.txt) text(p.txt, p.x, p.y, 12, p.col, "center"); else { ctx.fillStyle=p.col; const s=p.sz||3; ctx.fillRect(p.x,p.y,s,s);} });
@@ -1292,7 +1621,7 @@ function draw(){
 }
 let last = performance.now();
 function frame(now){
-  const dt = Math.min(.033, (now-last)/1000); last = now;
+  const dt = Math.max(0, Math.min(.033, (now-last)/1000)); last = now;
   update(dt); draw();
   drawChest(false, now/1000);
   if (cfOpen){
@@ -1311,7 +1640,7 @@ document.addEventListener("keydown", e => {
   if (cfOpen){ if (e.key === "Escape") closeChest(); return; }
   if (typing()) return;
   if (e.code==="Space"||e.code==="ArrowUp"||e.code==="KeyW"){ e.preventDefault(); if (!e.repeat) jumpPress(); }
-  else if (e.code==="KeyP" && game.state==="running"){ game.paused = !game.paused; }
+  else if (e.code==="KeyP" && game.state==="running"){ game.paused = !game.paused; Sound.duck(game.paused); }
 });
 document.addEventListener("keyup", e => {
   if (e.code==="Space"||e.code==="ArrowUp"||e.code==="KeyW") jumpRelease();
@@ -1503,6 +1832,7 @@ function bootFirebase(){
   });
 }
 bootLocal();
+renderSoundButtons();
 renderLB();
 resetRun(); game.state = "ready";
 renderAll();
