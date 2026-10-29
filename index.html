@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Relic Runner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Figtree:wght@400;500;700&display=swap">
+<style>
+/* Layout: one column "expedition log" — game cabinet on top, chest + collection + save ledger below. Single night-desert look by choice. */
+:root{
+  --night:#121330; --night-2:#1b1d44; --panel:#20234f; --line:#363a78;
+  --sand:#e9c07a; --sand-deep:#b8854a; --faience:#3fd0c9; --ink:#f3ead9; --muted:#a9a8cf;
+  --danger:#ff6b6b;
+  --r-common:#b9bcc9; --r-uncommon:#6fd36a; --r-rare:#4aa8ff; --r-epic:#b77bff; --r-legendary:#ffb23f; --r-mythic:#ff5ea8;
+  --display:"Pixelify Sans", "Courier New", monospace;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--night);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  background-image:radial-gradient(circle at 20% -10%, #2b2f73 0, transparent 45%), radial-gradient(circle at 90% 0%, #3a2350 0, transparent 40%);
+  background-attachment:fixed}
+.wrap{max-width:1040px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.01em}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--faience);outline-offset:2px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-size:30px;color:var(--sand)}
+.brand span{font-family:var(--display);color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.purse{display:flex;gap:10px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-family:var(--display);font-size:16px;font-variant-numeric:tabular-nums}
+.coin-ic{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#f2b33d 55%,#a8701c);box-shadow:0 0 0 2px #7a4e12 inset}
+.chip small{font-family:var(--body);color:var(--muted);font-size:12px}
+
+/* cabinet */
+.cabinet{background:linear-gradient(#262a5c,#1a1c42);border:2px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.screen{position:relative;border-radius:8px;overflow:hidden;background:#0c0d24}
+canvas#game{display:block;width:100%;height:auto;aspect-ratio:8/3;image-rendering:pixelated;touch-action:none}
+.controls{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 4px 2px}
+.keys{color:var(--muted);font-size:13px}
+kbd{font-family:var(--display);background:var(--night);border:1px solid var(--line);border-bottom-width:3px;border-radius:5px;padding:0 6px;color:var(--ink);font-size:12px}
+.pads{display:flex;gap:10px}
+.pad{min-width:96px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);border-bottom-width:4px;background:var(--panel);color:var(--ink);font-family:var(--display);font-size:16px;user-select:none;-webkit-user-select:none;touch-action:none}
+.pad:active,.pad.on{transform:translateY(2px);border-bottom-width:2px;background:#2a2e66}
+.runner-now{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.runner-now canvas{width:40px;height:40px}
+.runner-now b{color:var(--ink);font-weight:700}
+
+/* panels */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:22px}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--night-2);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel h2{font-size:21px;color:var(--sand)}
+.sub{color:var(--muted);font-size:14px;margin:0}
+.btn{border:0;border-radius:10px;padding:11px 18px;font-family:var(--display);font-size:16px;font-weight:600;background:var(--sand);color:#2a1a06;border-bottom:4px solid var(--sand-deep)}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(2px);border-bottom-width:2px}
+.btn[disabled]{background:#4a4c78;color:#9a9cc4;border-bottom-color:#35375e;cursor:not-allowed;filter:none;transform:none}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);border-bottom:3px solid var(--line)}
+.btn.small{padding:7px 12px;font-size:14px}
+
+/* chest */
+.chest-stage{position:relative;display:grid;place-items:center;min-height:210px;border-radius:12px;background:radial-gradient(circle at 50% 70%, #3a3170 0, #1b1d44 70%);overflow:hidden}
+.chest-stage canvas{width:150px;height:150px}
+.chest-stage.shake canvas#chestCv{animation:shake .14s linear infinite}
+@keyframes shake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-3px,1px) rotate(-3deg)}50%{transform:translate(2px,-1px) rotate(2deg)}75%{transform:translate(-1px,2px) rotate(-1deg)}100%{transform:translate(0,0)}}
+.reveal{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:12px;background:radial-gradient(circle at 50% 45%, var(--glow, #4aa8ff55) 0, transparent 65%)}
+.reveal canvas{width:120px;height:120px}
+.reveal .rname{font-family:var(--display);font-size:22px}
+.tag{display:inline-block;font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:2px 9px;border-radius:999px;border:1px solid currentColor}
+.reveal .note{font-size:13px;color:var(--muted)}
+.chest-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.progress{height:10px;border-radius:99px;background:#121334;border:1px solid var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#f2b33d,#ffe08a);width:0;transition:width .3s}
+
+/* odds table */
+.odds{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.odds th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:0 6px 6px;border-bottom:1px solid var(--line)}
+.odds td{padding:6px;border-bottom:1px solid #2a2d62}
+.odds td:first-child{font-family:var(--display);font-size:15px}
+.odds tr:last-child td{border-bottom:0}
+.tablewrap{overflow-x:auto}
+
+/* collection */
+.coll-head{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:4px 11px;font-size:13px}
+.filters button[aria-pressed="true"]{background:var(--panel);color:var(--ink);border-color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.card{position:relative;background:#171940;border:1px solid var(--line);border-top:3px solid var(--rc);border-radius:10px;padding:8px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink);text-align:center;min-width:0}
+.card canvas{width:64px;height:64px}
+.card .cn{font-size:12px;line-height:1.2;font-weight:700;min-height:2.4em;display:flex;align-items:center}
+.card .cr{font-family:var(--display);font-size:11px;color:var(--rc);letter-spacing:.06em;text-transform:uppercase}
+.card.locked .cn{color:#6d6f9e}
+.card.sel{outline:2px solid var(--sand);outline-offset:1px;background:#24275a}
+.card .cnt{position:absolute;top:4px;right:6px;font-family:var(--display);font-size:11px;color:var(--muted)}
+.card .num{position:absolute;top:4px;left:6px;font-family:var(--display);font-size:10px;color:#5f629a}
+button.card:hover:not(.locked){background:#202354}
+button.card.locked{cursor:default}
+
+/* save ledger */
+.save-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.box{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:#181a40;min-width:0}
+.box h3{font-size:16px;color:var(--ink)}
+.status{display:flex;align-items:center;gap:8px;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.dot.ok{background:var(--r-uncommon)} .dot.local{background:var(--sand)} .dot.err{background:var(--danger)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input[type=text],input[type=email],input[type=password],select,textarea{background:#101133;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font:inherit;font-size:14px;min-width:0}
+textarea{width:100%;resize:vertical;min-height:64px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.row input[type=text]{flex:1}
+.msg{font-size:13px;color:var(--muted);min-height:1.2em;margin:0}
+.who{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.who img{width:32px;height:32px;border-radius:50%}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--danger)}
+
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--sand);color:var(--ink);padding:10px 16px;border-radius:10px;font-family:var(--display);opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion: reduce){.chest-stage.shake canvas#chestCv{animation:none}.toast,.progress i{transition:none}}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ===== PASTE YOUR FIREBASE SETTINGS HERE (Firebase console > Project settings > Your apps) ===== */
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC51bS7c1dGrUAZ22-dPEvdc-GIlVE3578",
+  authDomain: "relic-runner-5ab77.firebaseapp.com",
+  projectId: "relic-runner-5ab77",
+  storageBucket: "relic-runner-5ab77.firebasestorage.app",
+  messagingSenderId: "583088901590",
+  appId: "1:583088901590:web:936fb95ef9c7ac2c5ae877"
+};
+</script>
+</head><body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Relic Runner</h1><span>Desert ruins · endless run</span></div>
+    <div class="purse">
+      <div class="chip" title="Coins to spend"><span class="coin-ic"></span><span id="hudCoins">0</span><small>coins</small></div>
+      <div class="chip" title="Characters unlocked"><span id="hudOwned">1</span><small>/ 100 found</small></div>
+      <div class="chip" title="Best run"><small>Best</small><span id="hudBest">0 m</span></div>
+    </div>
+  </header>
+
+  <section class="cabinet" aria-label="Game">
+    <div class="screen"><canvas id="game" width="960" height="360" aria-label="Relic Runner game screen. Press space or tap to start."></canvas></div>
+    <div class="controls">
+      <div class="runner-now"><canvas id="nowCv" width="80" height="80"></canvas><div>Running as <b id="nowName">—</b><br><span id="nowPerk"></span></div></div>
+      <div class="keys"><kbd>Space</kbd> / <kbd>↑</kbd> jump (hold for higher) · <kbd>↓</kbd> duck · <kbd>P</kbd> pause</div>
+      <div class="pads"><button class="pad" id="padJump" type="button">Jump</button><button class="pad" id="padDuck" type="button">Duck</button></div>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel" aria-labelledby="chestH">
+      <h2 id="chestH">Treasure Chest</h2>
+      <p class="sub">Save up 100 coins and crack open a chest for a random runner. Duplicates pay back coins.</p>
+      <div class="chest-stage" id="chestStage">
+        <canvas id="chestCv" width="300" height="300"></canvas>
+        <div class="reveal" id="reveal" hidden>
+          <canvas id="revealCv" width="240" height="240"></canvas>
+          <span class="tag" id="revealTier"></span>
+          <div class="rname" id="revealName"></div>
+          <div class="note" id="revealNote"></div>
+        </div>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="chestBar"></i></div>
+      <div class="chest-row">
+        <button class="btn" id="openChest" type="button">Open chest · 100</button>
+        <button class="btn ghost small" id="runWithNew" type="button" hidden>Run with this one</button>
+        <span class="sub" id="chestHint"></span>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="oddsH">
+      <h2 id="oddsH">Rarity &amp; drop odds</h2>
+      <p class="sub">Rarer runners carry a Lucky bonus: a chance for every coin you grab to count double.</p>
+      <div class="tablewrap">
+        <table class="odds">
+          <thead><tr><th>Rarity</th><th>Runners</th><th>Chest odds</th><th>Lucky</th><th>Dupe refund</th><th>Found</th></tr></thead>
+          <tbody id="oddsBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="collH">
+    <div class="coll-head">
+      <div><h2 id="collH">Collection</h2><p class="sub">Tap a runner you own to run with it.</p></div>
+      <div class="filters" id="filters" role="group" aria-label="Filter by rarity"></div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="saveH">
+    <h2 id="saveH">Player &amp; saves</h2>
+    <div class="save-grid">
+      <div class="box">
+        <h3>Account</h3>
+        <div class="status"><span class="dot" id="saveDot"></span><span id="saveText">Checking for your account…</span></div>
+        <div class="who" id="whoBox" hidden><div><b id="whoName"></b><br><span class="sub">Progress saves to your account automatically.</span></div><button class="btn ghost small" id="logoutBtn" type="button">Log out</button></div>
+        <form id="authBox" hidden novalidate style="display:flex;flex-direction:column;gap:8px">
+          <p class="sub">Log in to save your runners to your account and play on any device.</p>
+          <input type="email" id="authEmail" placeholder="Email" autocomplete="email" aria-label="Email">
+          <input type="password" id="authPass" placeholder="Password (6 or more characters)" autocomplete="current-password" aria-label="Password">
+          <div class="row"><button class="btn small" id="authLogin" type="submit">Log in</button><button class="btn ghost small" id="authSignup" type="button">Create account</button></div>
+          <div class="row"><button class="btn ghost small" id="authGoogle" type="button">Continue with Google</button><button class="btn ghost small" id="authReset" type="button">Forgot password</button></div>
+          <p class="msg" id="authMsg"></p>
+        </form>
+        <div id="localBox">
+          <p class="sub" style="margin-bottom:8px;margin-top:6px"><b style="color:var(--ink)">No account?</b> Play with a profile on this device. Each one keeps its own coins and characters.</p>
+          <div class="row"><select id="profileSel" aria-label="Choose player"></select><button class="btn ghost small" id="delProfile" type="button">Delete</button></div>
+          <div class="confirm" id="delConfirm" hidden><span id="delText"></span><button class="btn small" id="delYes" type="button">Delete</button><button class="btn ghost small" id="delNo" type="button">Keep</button></div>
+          <div class="row" style="margin-top:8px"><input type="text" id="newProfile" maxlength="20" placeholder="New player name" aria-label="New player name"><button class="btn small" id="addProfile" type="button">Add player</button></div>
+        </div>
+        <p class="msg" id="acctMsg"></p>
+      </div>
+      <div class="box">
+        <h3>Save code</h3>
+        <p class="sub">Copy this code to back up your progress or move it to another device, then paste it there and load it.</p>
+        <textarea id="codeBox" aria-label="Save code" spellcheck="false"></textarea>
+        <div class="row"><button class="btn small" id="copyCode" type="button">Copy my save code</button><button class="btn ghost small" id="loadCode" type="button">Load pasted code</button></div>
+        <div class="confirm" id="loadConfirm" hidden><span>This replaces the current progress.</span><button class="btn small" id="loadYes" type="button">Replace</button><button class="btn ghost small" id="loadNo" type="button">Cancel</button></div>
+        <p class="msg" id="codeMsg"></p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+/* ============================== CHARACTERS ============================== */
+const TIERS = [
+  {key:"common",    name:"Common",    color:"#b9bcc9", weight:52,  refund:10,  lucky:0},
+  {key:"uncommon",  name:"Uncommon",  color:"#6fd36a", weight:25,  refund:15,  lucky:.05},
+  {key:"rare",      name:"Rare",      color:"#4aa8ff", weight:14,  refund:25,  lucky:.10},
+  {key:"epic",      name:"Epic",      color:"#b77bff", weight:6.5, refund:40,  lucky:.20},
+  {key:"legendary", name:"Legendary", color:"#ffb23f", weight:2,   refund:60,  lucky:.35},
+  {key:"mythic",    name:"Mythic",    color:"#ff5ea8", weight:.5,  refund:100, lucky:.50},
+];
+const SPNAME = {fox:"Fox",frog:"Frog",cat:"Cat",bunny:"Bunny",bear:"Bear",chick:"Chick",mouse:"Mouse",pig:"Pig",turtle:"Turtle",slime:"Slime",
+  owl:"Owl",penguin:"Penguin",panda:"Panda",raccoon:"Raccoon",mushroom:"Shroom",robot:"Robot",ghost:"Ghost",knight:"Knight",axolotl:"Axolotl",ninja:"Ninja",wizard:"Wizard",
+  yeti:"Yeti",golem:"Golem",kitsune:"Kitsune",samurai:"Samurai",unicorn:"Unicorn"};
+const CHARS = [];
+const add = (tier, name, sp, main) => CHARS.push({id:CHARS.length, tier, name, sp, main});
+const combo = (tier, sps, cols) => sps.forEach(sp => cols.forEach(([cn, hex]) => add(tier, cn + " " + SPNAME[sp], sp, hex)));
+combo(0, ["fox","frog","cat","bunny","bear","chick","mouse","pig","turtle","slime"], [["Rust","#d9773a"],["Moss","#6f9a4a"],["Ash","#8d8a96"],["Sandy","#d8b26a"]]);
+combo(1, ["owl","penguin","panda","raccoon","mushroom"], [["Frost","#8fd3f0"],["Clover","#4fbf73"],["Dusk","#7a6bd1"],["Coral","#ff7f6e"],["Honey","#f2b33d"]]);
+combo(2, ["robot","ghost","knight","axolotl","ninja","wizard"], [["Cobalt","#3d6fe0"],["Jade","#2fb38a"],["Crimson","#d8384a"]]);
+combo(3, ["yeti","golem","kitsune","samurai","unicorn"], [["Storm","#5b7fa8"],["Amethyst","#9a5cd6"]]);
+add(4,"Solar Dragon","dragon","#f2a33a"); add(4,"Ember Phoenix","phoenix","#ff6a2b"); add(4,"Abyss Kraken","kraken","#3456b8");
+add(4,"Gilded Pharaoh","pharaoh","#e8c14f"); add(4,"Void Knight","voidknight","#3a2d5c"); add(4,"Thunder Griffin","griffin","#c9a46a");
+add(5,"Prism Sovereign","sovereign","#ff5ea8");
+const tierCounts = TIERS.map((_, i) => CHARS.filter(c => c.tier === i).length);
+
+function hexRGB(h){h=h.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+const shadeCache = {};
+function shade(hex, amt){
+  const k = hex + amt; if (shadeCache[k]) return shadeCache[k];
+  let [r,g,b] = hexRGB(hex);
+  if (amt < 0){r*=1+amt;g*=1+amt;b*=1+amt} else {r+=(255-r)*amt;g+=(255-g)*amt;b+=(255-b)*amt}
+  return shadeCache[k] = `rgb(${r|0},${g|0},${b|0})`;
+}
+
+/* Draws a character with bottom-center at (x,y). Sprite is about 20 x 24 sprite-pixels. */
+function drawChar(ctx, c, o){
+  const t = o.t || 0, pose = o.pose || "idle", sil = !!o.sil;
+  let main = c.main, dark, light;
+  if (c.sp === "sovereign"){ const h = (t*90)%360; main=`hsl(${h},80%,62%)`; dark=`hsl(${h},70%,38%)`; light=`hsl(${(h+50)%360},90%,84%)`; }
+  else { dark = shade(main,-.38); light = shade(main,.55); }
+  const SIL = "#0b0c22";
+  ctx.save(); ctx.translate(o.x, o.y); ctx.scale(o.s, o.s);
+  if (!sil && c.tier >= 3 && o.glow !== false){ ctx.shadowColor = c.tier===5 ? main : TIERS[c.tier].color; ctx.shadowBlur = c.tier>=4 ? 14 : 9; }
+  const P = (x,y,w,h,col) => { ctx.fillStyle = sil ? SIL : col; ctx.fillRect(x,y,w,h); };
+  const duck = pose === "duck";
+  const W = duck ? 8 : 7, T = duck ? -11 : -17;
+  const legless = ["slime","ghost","kraken"].includes(c.sp);
+  const ph = pose === "run" ? Math.floor(t*12)%2 : 0;
+  let bob = (pose === "run" && legless) ? (ph ? -1 : 0) : 0;
+  const B = legless ? 0 : -3;
+  ctx.translate(0, bob);
+  let bodyCol = main, legCol = dark, eyeWhite = "#fff", pupil = "#17182c";
+  if (c.sp === "panda") { bodyCol = "#f2efe8"; legCol = main; }
+  if (c.sp === "mushroom") { bodyCol = "#efe0c2"; legCol = "#c9b48e"; }
+  if (c.sp === "penguin") legCol = "#f59e0b";
+  if (c.sp === "golem" || c.sp === "voidknight") { eyeWhite = c.sp==="golem" ? "#7ff3ff" : "#d59bff"; pupil = eyeWhite; }
+  const ey = T + (duck ? 3 : 4);
+  const earPointy = x => { P(x,T-2,3,2,main); P(x+1,T-3,1,1,main); P(x+1,T-2,1,1,light); };
+  const earRound  = (x,col) => { P(x,T-2,3,3,col||main); P(x+1,T-1,1,1,light); };
+
+  // ---- behind body
+  switch (c.sp){
+    case "fox": P(-W-4,T+7,5,3,main); P(-W-5,T+6,2,2,light); break;
+    case "raccoon": for (let i=0;i<5;i++) P(-W-5+i,T+6+(i%2),1,3,i%2?dark:main); break;
+    case "kitsune": [[3,4],[6,5],[9,4]].forEach(([dy,len],i)=>{P(-W-len,T+dy,len+1,2,main);P(-W-len-1,T+dy,2,2,light)}); break;
+    case "dragon": P(-W-5,T-3,6,2,dark); P(-W-6,T-1,7,2,dark); P(-W-4,T+1,5,2,dark); P(-W-3,T+3,3,1,dark); P(-W-3,T+8,4,2,main); P(-W-5,T+9,2,1,main); break;
+    case "phoenix": P(-W-5,T-1,6,2,"#ffd34d"); P(-W-6,T+1,7,2,"#ff7a2b"); P(-W-4,T+3,5,2,"#e5322b"); P(-W-6,T+8,5,1,"#ffd34d"); P(-W-7,T+9,5,1,"#ff7a2b"); break;
+    case "griffin": P(-W-5,T,6,2,shade(main,-.2)); P(-W-6,T+2,7,2,shade(main,-.3)); P(-W-4,T+4,5,2,shade(main,-.4)); P(-W-3,T+9,3,1,dark); P(-W-4,T+8,1,2,"#5a3d22"); break;
+    case "sovereign": P(-W-5,T-1,6,2,"#ffffff"); P(-W-6,T+1,7,2,"#f0e6ff"); P(-W-4,T+3,5,2,"#dcd0ff"); break;
+    case "voidknight": P(-W-2,T+3,3,B-T-2,"#6a3cc2"); P(-W-3,T+6,2,B-T-5,"#4b2696"); break;
+    case "unicorn": P(-W-2,T+1,3,2,"#ff8ad8"); P(-W-3,T+3,3,2,"#8ad7ff"); P(-W-2,T+5,3,2,"#ffe27a"); break;
+    case "bunny": P(-W-1,T+9,2,2,"#ffffff"); break;
+    case "mouse": P(-W-3,T+10,3,1,dark); P(-W-4,T+9,1,1,dark); break;
+  }
+  // ears / tops that sit behind the body outline
+  switch (c.sp){
+    case "fox": case "pig": earPointy(-5); earPointy(2); break;
+    case "cat": case "raccoon": case "kitsune": earPointy(-5); earPointy(2); break;
+    case "bunny": P(-4,T-7,2,7,main); P(-3,T-6,1,5,light); P(1,T-8,2,8,main); P(2,T-7,1,6,light); break;
+    case "bear": earRound(-6); earRound(3); break;
+    case "panda": earRound(-6,main); earRound(3,main); break;
+    case "mouse": P(-6,T-3,4,4,main); P(-5,T-2,2,2,"#f6a5b5"); P(2,T-3,4,4,main); P(3,T-2,2,2,"#f6a5b5"); break;
+    case "frog": P(-1,T-2,4,3,main); P(3,T-2,4,3,main); break;
+    case "owl": case "griffin": P(-6,T-3,2,3,main); P(4,T-3,2,3,main); break;
+    case "yeti": P(-7,T-3,2,3,"#e8dcc0"); P(-6,T-4,1,1,"#e8dcc0"); P(5,T-3,2,3,"#e8dcc0"); P(6,T-4,1,1,"#e8dcc0"); break;
+  }
+  // ---- legs
+  if (!legless){
+    const air = pose === "jump";
+    P(-5, B + (air ? -1 : (ph ? -1 : 0)), 3, air ? 2 : 3, legCol);
+    P( 2, B + (air ? -1 : (ph ? 0 : -1)), 3, air ? 2 : 3, legCol);
+  }
+  // ---- body
+  if (c.sp === "ghost"){
+    ctx.globalAlpha = sil ? 1 : .92;
+    P(-W+1,T,2*W-2,B-T-2,light); P(-W,T+1,2*W,B-T-3,light);
+    for (let i=0;i<7;i++) P(-W+i*2,B-3,2,(i+Math.floor(t*8))%2?3:2,light);
+    ctx.globalAlpha = 1;
+  } else if (c.sp === "kraken"){
+    P(-W+1,T,2*W-2,B-T-4,main); P(-W,T+1,2*W,B-T-6,main);
+    for (let i=0;i<4;i++){ const x=-W+1+i*4, wv=Math.round(Math.sin(t*10+i)*1); P(x+wv,B-5,2,5,dark); P(x+wv,B-3,1,1,light); }
+  } else if (c.sp === "slime"){
+    const sq = pose==="run" && ph ? 1 : 0;
+    P(-W+1-sq,T+1+sq,2*W-2+2*sq,B-T-1-sq,main); P(-W-sq,T+3+sq,2*W+2*sq,B-T-3-sq,main);
+    P(-W+3,T+sq,2*W-6,1,main); P(-4,T+3+sq,2,2,"rgba(255,255,255,.55)"); P(-W+1,B-1,2*W-2,1,dark);
+  } else {
+    P(-W+1,T,2*W-2,B-T,bodyCol); P(-W,T+1,2*W,B-T-2,bodyCol); P(-W+1,B-1,2*W-2,1,c.sp==="panda"?"#d9d4c8":dark);
+  }
+  // belly
+  if (["fox","frog","bear","chick","owl","dragon","griffin","axolotl","kitsune","pig"].includes(c.sp)) P(-1,ey+4,W,Math.max(2,B-ey-6),light);
+  if (c.sp === "penguin") P(-1,ey+1,W+1,B-ey-2,"#f5f3ee");
+  // rare tier pattern: stripes
+  if (c.tier === 2 && !["ghost","robot","knight"].includes(c.sp)) for (let i=0;i<3;i++) P(-W+1,T+5+i*3,3,1,dark);
+  if (c.tier === 2 && c.sp === "robot") { P(-W+1,T+8,1,1,light); P(-W+1,B-3,1,1,light); P(W-2,B-3,1,1,light); }
+
+  // ---- species details, front
+  switch (c.sp){
+    case "turtle": P(-W,T+2,9,B-T-4,dark); P(-W+1,T+1,7,1,dark); P(-W+2,T+4,2,2,light); P(-W+5,T+4,2,2,light); P(-W+3,T+8,3,2,light); break;
+    case "panda": P(-1,ey-1,3,4,main); P(3,ey-1,3,4,main); break;
+    case "raccoon": P(-2,ey-1,W+2,3,dark); break;
+    case "owl": P(-1,ey-1,4,4,light); P(3,ey-1,4,4,light); for(let i=0;i<2;i++){P(-1,ey+5+i*3,1,1,dark);P(2,ey+5+i*3,1,1,dark)} break;
+    case "penguin": P(-W-1,T+7,2,4,dark); break;
+    case "chick": P(-3,T+7,4,3,dark); P(-1,T-2,1,2,main); P(1,T-3,1,3,main); break;
+    case "golem": P(-W+2,T+3,1,3,dark); P(-W+3,T+6,2,1,dark); P(1,B-5,1,3,dark); P(-W-1,T-1,2,3,"#7ff3ff"); P(-W+2,T-2,2,2,"#9ff7ff"); break;
+    case "yeti": P(-5,T-1,2,1,light); P(-1,T-1,3,1,light); P(-1,ey-1,W,6,shade(main,.75)); break;
+    case "pharaoh": P(-W-1,T,3,11,"#2c4fa3"); for(let i=0;i<5;i++) P(-W-1,T+1+i*2,3,1,"#e8c14f"); P(-W,T-1,2*W,3,"#e8c14f"); P(-W,T,2*W,1,"#2c4fa3"); P(1,T-3,1,2,"#2fb38a"); break;
+    case "samurai": P(-W,T-1,2*W,4,dark); P(-W-1,T+2,2*W+2,1,dark); P(-3,T-4,1,3,"#ffd34d"); P(-4,T-5,1,2,"#ffd34d"); P(3,T-4,1,3,"#ffd34d"); P(4,T-5,1,2,"#ffd34d"); P(0,T-2,1,2,"#e5484d"); break;
+    case "knight": P(-W,T,2*W,7,"#c9ced8"); P(-W+1,T-1,2*W-2,1,"#c9ced8"); P(0,ey,W,1,"#17182c"); P(-2,T-4,3,4,main); P(-3,T-3,1,2,main); P(-W,T+6,2*W,1,"#9aa1b0"); break;
+    case "voidknight": P(-W,T,2*W,8,"#241b3d"); P(-W+1,T-1,2*W-2,1,"#241b3d"); P(-W-1,T-3,2,3,"#120d22"); P(W-1,T-3,2,3,"#120d22"); P(-1,ey,W+1,2,"#120d22"); break;
+    case "ninja": P(-W,T,2*W,ey-T+4,dark); P(-1,ey-1,W+1,3,"#f1d1b0"); P(-W-3,T+2,3,1,light); P(-W-4,T+3,2,1,light); P(-W,T+2,2*W,1,light); break;
+    case "griffin": P(-W+1,T,2*W-2,7,"#f4efe2"); P(-W,T+1,2*W,6,"#f4efe2"); break;
+  }
+  // ---- eyes
+  const blink = !sil && (t % 4) < .12;
+  const eyes = (x1, x2, y) => {
+    if (blink){ P(x1,y+1,2,1,pupil); P(x2,y+1,2,1,pupil); return; }
+    P(x1,y,2,2,eyeWhite); P(x2,y,2,2,eyeWhite);
+    if (pupil !== eyeWhite){ P(x1+1,y,1,2,pupil); P(x2+1,y,1,2,pupil); }
+  };
+  if (c.sp === "frog") eyes(0,4,T-1);
+  else if (c.sp === "knight") {}
+  else if (c.sp === "robot"){ P(-1,ey-1,W+1,4,"#10131f"); P(0,ey,2,2,"#5ef0ff"); P(4,ey,2,2,"#5ef0ff"); }
+  else if (c.sp === "voidknight"){ P(0,ey,2,1,"#d59bff"); P(4,ey,2,1,"#d59bff"); }
+  else if (c.sp === "ghost"){ P(0,ey,2,3,"#2a2550"); P(4,ey,2,3,"#2a2550"); }
+  else if (c.sp === "kraken"){ P(1,ey-1,4,4,"#fff"); P(3,ey,2,2,"#17182c"); }
+  else eyes(0,4,ey);
+
+  // ---- face / hats on top
+  switch (c.sp){
+    case "fox": P(W-1,ey+3,2,1,"#17182c"); break;
+    case "frog": P(1,T+7,5,1,dark); break;
+    case "cat": P(W,ey+3,2,1,dark); P(W,ey+5,2,1,dark); P(W-1,ey+3,1,1,"#f6a5b5"); break;
+    case "bear": P(3,ey+3,4,3,light); P(6,ey+3,1,1,"#17182c"); break;
+    case "chick": case "owl": case "penguin": P(W-1,ey+2,3,2,"#f59e0b"); P(W-1,ey+4,2,1,"#d4790a"); break;
+    case "mouse": P(W,ey+3,1,1,"#f6a5b5"); break;
+    case "pig": P(W-2,ey+3,3,3,light); P(W-1,ey+4,1,1,dark); P(W,ey+4,1,1,dark); break;
+    case "mushroom": P(-W-2,T-4,2*W+4,4,main); P(-W-1,T-5,2*W+2,1,main); P(-W,T-6,2*W,1,main); P(-W-2,T,2*W+4,1,dark); P(-4,T-4,2,2,"#fff"); P(2,T-5,2,2,"#fff"); P(W-1,T-3,1,1,"#fff"); break;
+    case "robot": P(0,T-4,1,4,dark); P(-1,T-6,3,2,"#ff4d6d"); P(W,ey+5,1,1,light); break;
+    case "axolotl": P(-W-2,T+1,2,1,"#ff7aa8"); P(-W-3,T+3,3,1,"#ff7aa8"); P(-W-2,T+5,2,1,"#ff7aa8"); P(W,T+1,2,1,"#ff7aa8"); P(W,T+3,3,1,"#ff7aa8"); P(1,ey+4,4,1,dark); break;
+    case "wizard": P(-W-1,T-1,2*W+2,2,dark); P(-4,T-3,8,2,dark); P(-3,T-5,6,2,dark); P(-2,T-7,4,2,dark); P(-2,T-9,2,2,dark); P(-3,T-10,2,1,dark); P(1,T-4,2,2,"#ffd34d"); P(1,ey+3,5,4,"#e9e6f0"); P(2,ey+7,3,2,"#e9e6f0"); break;
+    case "kitsune": P(1,ey+3,1,2,"#e5484d"); P(5,ey+3,1,2,"#e5484d"); P(W,ey+3,1,1,"#17182c"); break;
+    case "unicorn": P(3,T-3,2,3,"#ffe08a"); P(4,T-6,1,3,"#ffe08a"); P(3,T-2,2,1,"#e0b04a"); P(-W+1,T-1,3,2,"#ff8ad8"); P(-W+4,T-1,2,1,"#8ad7ff"); P(W-1,ey+4,1,1,dark); break;
+    case "dragon": P(-3,T-3,1,3,"#f6e7c1"); P(-4,T-4,1,1,"#f6e7c1"); P(3,T-3,1,3,"#f6e7c1"); P(4,T-4,1,1,"#f6e7c1"); P(-W+1,T-1,1,1,dark); P(W-1,ey+3,1,1,dark); P(1,ey+5,5,1,dark); break;
+    case "phoenix": P(-1,T-3,2,3,"#ffd34d"); P(1,T-5,2,5,"#ff3d2e"); P(3,T-3,1,3,"#ffd34d"); P(W-1,ey+2,3,2,"#ffd34d"); break;
+    case "griffin": P(W-1,ey+2,3,2,"#e0a12a"); P(W+1,ey+3,1,2,"#b8781a"); break;
+    case "pharaoh": P(-1,ey+2,2,1,"#17182c"); P(3,ey+2,3,1,"#17182c"); P(1,B-6,4,3,"#2c4fa3"); P(2,B-5,2,1,"#e8c14f"); break;
+    case "sovereign": P(-4,T-2,8,2,"#ffd34d"); P(-4,T-4,1,2,"#ffd34d"); P(-1,T-5,2,3,"#ffd34d"); P(3,T-4,1,2,"#ffd34d"); P(-1,T-2,2,1,"#ff3d7f"); P(1,ey+4,4,1,dark); break;
+    case "yeti": P(1,ey+4,4,1,dark); break;
+    case "golem": P(1,ey+4,4,1,"#7ff3ff"); break;
+    case "samurai": P(1,ey+4,4,2,"#2a2a33"); break;
+  }
+  ctx.restore();
+}
+
+/* ============================== STATE & SAVES ============================== */
+const newState = () => ({v:1, coins:0, lifetimeCoins:0, best:0, bestRound:0, runs:0, chests:0, owned:{"0":1}, selected:0, updatedAt:0});
+function sanitize(s){
+  const d = newState(); if (!s || typeof s !== "object") return d;
+  const num = (v, def) => (Number.isFinite(+v) && +v >= 0) ? Math.floor(+v) : def;
+  d.coins = num(s.coins,0); d.lifetimeCoins = num(s.lifetimeCoins,d.coins); d.best = num(s.best,0); d.bestRound = num(s.bestRound,0);
+  d.runs = num(s.runs,0); d.chests = num(s.chests,0); d.updatedAt = num(s.updatedAt,0);
+  d.owned = {};
+  if (s.owned && typeof s.owned === "object") for (const k in s.owned){ const i = +k; if (Number.isInteger(i) && i>=0 && i<100 && num(s.owned[k],0)>0) d.owned[i] = num(s.owned[k],1); }
+  if (!Object.keys(d.owned).length) d.owned = {"0":1};
+  d.selected = d.owned[s.selected] ? +s.selected : +Object.keys(d.owned)[0];
+  return d;
+}
+let state = newState();
+
+const LS = {
+  get(k){ try { return localStorage.getItem(k); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); return true; } catch { return false; } },
+  del(k){ try { localStorage.removeItem(k); } catch {} },
+};
+const PREFIX = "relicrunner:";
+const Saves = {
+  mode: "local",       // "local" | "fire"
+  db: null, uid: null, profile: "Player 1",
+  writing: false, dirty: false, timer: null, lastError: null,
+  profiles(){ try { const p = JSON.parse(LS.get(PREFIX+"profiles")||"null"); if (Array.isArray(p) && p.length) return p.filter(x=>typeof x==="string"); } catch {} return ["Player 1"]; },
+  setProfiles(list){ LS.set(PREFIX+"profiles", JSON.stringify(list)); },
+  loadLocal(name){ try { return sanitize(JSON.parse(LS.get(PREFIX+"save:"+name)||"null")); } catch { return newState(); } },
+  saveLocal(){ return LS.set(PREFIX+"save:"+this.profile, JSON.stringify(state)); },
+  
+  save(now){
+    state.updatedAt = Date.now();
+    const okLocal = this.mode === "local" ? this.saveLocal() : true;
+    if (this.mode === "local"){ setSaveStatus(okLocal ? "local" : "err"); renderCode(); return; }
+    this.dirty = true;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.flush(), now ? 0 : 700);
+  },
+  async flush(){
+    if (this.writing || !this.dirty || this.mode !== "fire") return;
+    this.writing = true; this.dirty = false; setSaveStatus("saving");
+    const uid = this.uid;
+    try { await this.fs.collection("saves").doc(uid).set(JSON.parse(JSON.stringify(state))); if (this.uid === uid) setSaveStatus("ok"); }
+    catch (e) {
+      if (e && (e.code === "unavailable" || e.code === "deadline-exceeded")){ this.dirty = true; setTimeout(()=>this.flush(), 1500 + Math.random()*1000); setSaveStatus("saving"); }
+      else { this.mode = "local"; this.saveLocal(); setSaveStatus("fallback"); renderAccount(); }
+    }
+    this.writing = false;
+    if (this.dirty) this.flush();
+    renderCode();
+  },
+};
+
+function encodeSave(s){ const j = JSON.stringify({coins:s.coins,lifetimeCoins:s.lifetimeCoins,best:s.best,bestRound:s.bestRound,runs:s.runs,chests:s.chests,owned:s.owned,selected:s.selected});
+  return "RR1-" + btoa(unescape(encodeURIComponent(j))); }
+function decodeSave(code){
+  code = (code||"").trim().replace(/\s+/g,"");
+  if (!code.startsWith("RR1-")) throw new Error("That doesn't look like a Relic Runner save code. Codes start with RR1-.");
+  let obj; try { obj = JSON.parse(decodeURIComponent(escape(atob(code.slice(4))))); } catch { throw new Error("The code is incomplete or was changed. Copy the whole code and try again."); }
+  return sanitize(obj);
+}
+
+/* ============================== UI HELPERS ============================== */
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString("en-US");
+let toastT;
+function toast(msg){ const el=$("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2200); }
+function setupCanvas(cv){ const ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false; return ctx; }
+function ownedCount(){ return Object.keys(state.owned).length; }
+function tierFound(i){ return CHARS.filter(c=>c.tier===i && state.owned[c.id]).length; }
+function pct(w){ return (w % 1 ? w.toFixed(1) : w) + "%"; }
+
+function setSaveStatus(kind){
+  const dot=$("saveDot"), txt=$("saveText");
+  dot.className = "dot";
+  if (kind === "ok"){ dot.classList.add("ok"); txt.textContent = "Saved to your account"; }
+  else if (kind === "saving"){ dot.classList.add("ok"); txt.textContent = "Saving to your account…"; }
+  else if (kind === "local"){ dot.classList.add("local"); txt.textContent = "Saved on this device as " + Saves.profile; }
+  else if (kind === "fallback"){ dot.classList.add("local"); txt.textContent = "Couldn't save to your account, so progress saves on this device as " + Saves.profile; }
+  else if (kind === "nosetup"){ dot.classList.add("local"); txt.textContent = "Accounts aren't set up on this site yet. Progress saves on this device as " + Saves.profile; }
+  else if (kind === "err"){ dot.classList.add("err"); txt.textContent = "This browser is blocking saves. Use your save code to keep progress."; }
+}
+
+function renderHUD(){
+  $("hudCoins").textContent = fmt(state.coins);
+  $("hudOwned").textContent = ownedCount();
+  $("hudBest").textContent = fmt(state.best) + " m";
+  const c = CHARS[state.selected];
+  $("nowName").textContent = c.name;
+  $("nowName").style.color = TIERS[c.tier].color;
+  $("nowPerk").textContent = TIERS[c.tier].name + (TIERS[c.tier].lucky ? " · Lucky " + Math.round(TIERS[c.tier].lucky*100) + "%" : " · no Lucky bonus");
+  $("chestBar").style.width = Math.min(100, state.coins) + "%";
+  const can = state.coins >= 100 && !chestBusy;
+  $("openChest").disabled = !can;
+  $("chestHint").textContent = state.coins >= 100 ? (Math.floor(state.coins/100) + " chest" + (state.coins>=200?"s":"") + " ready") : (100 - state.coins) + " more coins to go";
+}
+function renderOdds(){
+  $("oddsBody").innerHTML = TIERS.map((t,i)=>`<tr><td style="color:${t.color}">${t.name}</td><td>${tierCounts[i]}</td><td>${pct(t.weight)}</td><td>${t.lucky?Math.round(t.lucky*100)+"%":"—"}</td><td>+${t.refund}</td><td>${tierFound(i)} / ${tierCounts[i]}</td></tr>`).join("");
+}
+let filter = -1;
+function renderFilters(){
+  const opts = [{i:-1,name:"All"}].concat(TIERS.map((t,i)=>({i,name:t.name})));
+  $("filters").innerHTML = opts.map(o=>`<button type="button" data-f="${o.i}" aria-pressed="${filter===o.i}" ${o.i>=0?`style="color:${TIERS[o.i].color}"`:""}>${o.name}${o.i>=0?` ${tierFound(o.i)}/${tierCounts[o.i]}`:` ${ownedCount()}/100`}</button>`).join("");
+}
+const cardCanvases = [];
+function renderCards(){
+  const box = $("cards"); box.textContent = "";
+  cardCanvases.length = 0;
+  CHARS.forEach(c => {
+    if (filter >= 0 && c.tier !== filter) return;
+    const own = !!state.owned[c.id], t = TIERS[c.tier];
+    const b = document.createElement("button"); b.type = "button";
+    b.className = "card" + (own ? "" : " locked") + (state.selected === c.id ? " sel" : "");
+    b.style.setProperty("--rc", t.color);
+    b.setAttribute("aria-label", own ? `${c.name}, ${t.name}${state.selected===c.id?", running now":""}` : `Locked ${t.name} runner`);
+    const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128;
+    const num = document.createElement("span"); num.className = "num"; num.textContent = "#" + String(c.id+1).padStart(3,"0");
+    const nm = document.createElement("span"); nm.className = "cn"; nm.textContent = own ? c.name : "???";
+    const rr = document.createElement("span"); rr.className = "cr"; rr.textContent = t.name;
+    b.append(num, cv, nm, rr);
+    if (own && state.owned[c.id] > 1){ const n = document.createElement("span"); n.className="cnt"; n.textContent = "×" + state.owned[c.id]; b.append(n); }
+    if (own) b.addEventListener("click", () => selectChar(c.id));
+    box.append(b);
+    const ctx = setupCanvas(cv);
+    drawChar(ctx, c, {x:64, y:104, s:3.6, t:0, sil:!own});
+    if (c.tier >= 4 && own) cardCanvases.push({ctx, c});
+  });
+}
+function renderNow(){ const cv=$("nowCv"), ctx=setupCanvas(cv); ctx.clearRect(0,0,80,80); drawChar(ctx, CHARS[state.selected], {x:40,y:70,s:2.4,t:performance.now()/1000}); }
+function renderAll(){ renderHUD(); renderOdds(); renderFilters(); renderCards(); renderNow(); renderAccount(); renderCode(); }
+
+function selectChar(id){
+  if (!state.owned[id] || state.selected === id) return;
+  state.selected = id; Saves.save(); renderHUD(); renderCards(); renderNow();
+  toast("Now running as " + CHARS[id].name);
+}
+$("filters").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; filter = +b.dataset.f; renderFilters(); renderCards(); });
+
+/* ---------- account box ---------- */
+function renderAccount(){
+  const cloud = Saves.mode === "fire";
+  $("localBox").hidden = cloud; $("whoBox").hidden = !cloud;
+  $("authBox").hidden = cloud || !Saves.auth;
+  if (!cloud){
+    const sel = $("profileSel"); sel.textContent = "";
+    Saves.profiles().forEach(p => { const o=document.createElement("option"); o.value=p; o.textContent=p; if (p===Saves.profile) o.selected=true; sel.append(o); });
+    $("delProfile").disabled = Saves.profiles().length < 2;
+  }
+}
+$("profileSel").addEventListener("change", e => switchProfile(e.target.value));
+function switchProfile(name){
+  if (game.state === "running") endRun();
+  Saves.profile = name; LS.set(PREFIX+"current", name);
+  state = Saves.loadLocal(name); renderAll(); setSaveStatus("local"); toast("Playing as " + name);
+}
+$("addProfile").addEventListener("click", () => {
+  const name = $("newProfile").value.trim().replace(/\s+/g," ");
+  const list = Saves.profiles();
+  if (!name){ $("acctMsg").textContent = "Type a name for the new player first."; return; }
+  if (list.some(p=>p.toLowerCase()===name.toLowerCase())){ $("acctMsg").textContent = name + " already exists. Pick it from the list."; return; }
+  list.push(name); Saves.setProfiles(list); $("newProfile").value = ""; $("acctMsg").textContent = "";
+  Saves.saveLocal(); switchProfile(name); Saves.saveLocal();
+});
+$("newProfile").addEventListener("keydown", e => { if (e.key === "Enter") $("addProfile").click(); });
+$("delProfile").addEventListener("click", () => { $("delText").textContent = `Delete ${Saves.profile} and all their progress?`; $("delConfirm").hidden = false; });
+$("delNo").addEventListener("click", () => $("delConfirm").hidden = true);
+$("delYes").addEventListener("click", () => {
+  const list = Saves.profiles().filter(p => p !== Saves.profile);
+  LS.del(PREFIX+"save:"+Saves.profile); Saves.setProfiles(list); $("delConfirm").hidden = true;
+  switchProfile(list[0]);
+});
+
+/* ---------- save code ---------- */
+function renderCode(){ if (document.activeElement !== $("codeBox")) $("codeBox").value = encodeSave(state); }
+$("copyCode").addEventListener("click", () => {
+  const box = $("codeBox"); box.value = encodeSave(state);
+  const fallback = () => { box.focus(); box.select(); $("codeMsg").textContent = "Code selected. Press Ctrl+C (or ⌘C) to copy it."; };
+  try { navigator.clipboard.writeText(box.value).then(() => { $("codeMsg").textContent = "Copied. Keep it somewhere safe."; }, fallback); } catch { fallback(); }
+});
+let pendingImport = null;
+$("loadCode").addEventListener("click", () => {
+  try { pendingImport = decodeSave($("codeBox").value); $("loadConfirm").hidden = false; $("codeMsg").textContent = `Code holds ${fmt(pendingImport.coins)} coins and ${Object.keys(pendingImport.owned).length} runners.`; }
+  catch (e) { $("codeMsg").textContent = e.message; }
+});
+$("loadNo").addEventListener("click", () => { pendingImport = null; $("loadConfirm").hidden = true; $("codeMsg").textContent = ""; renderCode(); });
+$("loadYes").addEventListener("click", () => {
+  if (!pendingImport) return;
+  if (game.state === "running") endRun();
+  state = pendingImport; pendingImport = null; $("loadConfirm").hidden = true; $("codeMsg").textContent = "Progress loaded.";
+  Saves.save(true); renderAll();
+});
+
+/* ============================== TREASURE CHEST ============================== */
+let chestBusy = false, lastPull = null;
+const chestCtx = setupCanvas($("chestCv"));
+function drawChest(open, t){
+  const ctx = chestCtx; ctx.clearRect(0,0,300,300);
+  ctx.save(); ctx.translate(150,170); ctx.scale(6,6);
+  const P=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
+  P(-11,8,22,2,"rgba(0,0,0,.35)");
+  P(-10,-2,20,10,"#8a4f22"); P(-10,-2,20,1,"#a8662e"); P(-10,7,20,1,"#5e3314");
+  P(-10,-2,2,10,"#e9c07a"); P(8,-2,2,10,"#e9c07a"); P(-2,-1,4,4,"#e9c07a"); P(-1,0,2,2,"#5e3314");
+  if (!open){ P(-10,-8,20,6,"#9a5a26"); P(-9,-9,18,1,"#9a5a26"); P(-10,-8,20,1,"#b8743a"); P(-10,-8,2,6,"#e9c07a"); P(8,-8,2,6,"#e9c07a"); P(-2,-4,4,2,"#e9c07a"); }
+  else { P(-10,-14,20,4,"#9a5a26"); P(-10,-14,2,4,"#e9c07a"); P(8,-14,2,4,"#e9c07a"); P(-9,-4,18,2,"#ffe08a"); P(-6,-6,12,2,"rgba(255,224,138,.6)"); }
+  ctx.restore();
+  if (!open){ ctx.fillStyle = "rgba(255,224,138,"+(.25+.2*Math.sin(t*3))+")"; [[80,70],[226,92],[200,52]].forEach(([x,y],i)=>{const s=4+2*Math.sin(t*4+i);ctx.fillRect(x-s/2,y-s/2,s,s)}); }
+}
+function rollChar(){
+  let r = Math.random() * 100, tier = 0;
+  for (let i=0;i<TIERS.length;i++){ if (r < TIERS[i].weight){ tier=i; break; } r -= TIERS[i].weight; tier = i; }
+  const pool = CHARS.filter(c=>c.tier===tier);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+$("openChest").addEventListener("click", () => {
+  if (chestBusy || state.coins < 100) return;
+  chestBusy = true; state.coins -= 100; state.chests++;
+  const c = rollChar(), isNew = !state.owned[c.id], t = TIERS[c.tier];
+  state.owned[c.id] = (state.owned[c.id]||0) + 1;
+  if (!isNew) state.coins += t.refund;
+  Saves.save(true);
+  $("reveal").hidden = true; $("runWithNew").hidden = true;
+  $("chestStage").classList.add("shake"); renderHUD();
+  setTimeout(() => {
+    $("chestStage").classList.remove("shake");
+    lastPull = c;
+    $("reveal").style.setProperty("--glow", t.color + "66");
+    $("revealTier").textContent = t.name; $("revealTier").style.color = t.color;
+    $("revealName").textContent = c.name;
+    $("revealNote").textContent = isNew ? `New runner! #${String(c.id+1).padStart(3,"0")} of 100` : `Duplicate · +${t.refund} coins back`;
+    $("reveal").hidden = false; $("runWithNew").hidden = state.selected === c.id;
+    chestBusy = false;
+    renderAll();
+    toast(isNew ? `Unlocked ${c.name} (${t.name})!` : `${c.name} again: +${t.refund} coins`);
+  }, 1300);
+});
+$("runWithNew").addEventListener("click", () => { if (lastPull){ selectChar(lastPull.id); $("runWithNew").hidden = true; } });
+
+/* ============================== GAME ============================== */
+const cv = $("game"), ctx = setupCanvas(cv);
+const GW = 640, GH = 240, GROUND = 204, PX = 92;
+const SCALE = cv.width / GW;
+const ROUND_LEN = r => 220 + r*80;           // meters per round
+const ROUND_SKIES = [["#1b1d4a","#4a2f6b","#c96a5a"],["#121335","#2a2a6a","#7a4f9a"],["#0b0c26","#15204f","#2b5a7a"],["#120a24","#3a1550","#8a2a5a"],["#06141c","#0d3a44","#2fb38a"]];
+const game = {
+  state:"ready", t:0, speed:0, dist:0, round:1, roundDist:0, runCoins:0,
+  py:0, vy:0, onGround:true, ducking:false, jumpHeld:false,
+  obs:[], coins:[], parts:[], nextObs:0, nextCoin:0, banner:null, flash:0, paused:false,
+};
+const stars = Array.from({length:70},()=>({x:Math.random()*GW, y:Math.random()*140, s:Math.random()<.2?2:1, p:Math.random()*6}));
+function resetRun(){
+  Object.assign(game, {t:0, speed:300, dist:0, round:1, roundDist:0, runCoins:0, py:0, vy:0, onGround:true, ducking:false, obs:[], coins:[], parts:[], nextObs:420, nextCoin:260, banner:{text:"Round 1", sub:"Go!", t:1.6}, flash:0, paused:false});
+}
+function startRun(){ resetRun(); game.state = "running"; }
+function endRun(){
+  game.state = "over"; game.overT = game.t;
+  state.runs++; const d = Math.floor(game.dist);
+  const newBest = d > state.best;
+  if (newBest) state.best = d;
+  if (game.round > state.bestRound) state.bestRound = game.round;
+  game.newBest = newBest;
+  Saves.save(true); renderHUD(); renderCode();
+}
+function jumpPress(){
+  if (game.state !== "running"){ if (game.state==="over" && game.t - game.overT < .6) return; startRun(); return; }
+  if (game.paused){ game.paused = false; return; }
+  game.jumpHeld = true;
+  if (game.onGround){ game.vy = -640; game.onGround = false; }
+}
+function jumpRelease(){ game.jumpHeld = false; if (game.vy < -300) game.vy = -300; }
+function duck(on){ game.ducking = on; if (on && !game.onGround) game.vy = Math.max(game.vy, 500); }
+
+function spawnObstacle(){
+  const r = game.round, roll = Math.random();
+  if (r >= 2 && roll < Math.min(.35, .15 + r*.04)){
+    const high = Math.random() < .55;
+    game.obs.push({type:"bat", x:GW+20, y: high ? GROUND-44 : GROUND-20, w:22, h:12, ph:Math.random()*6});
+  } else if (roll < .7){
+    const n = 1 + (Math.random() < Math.min(.5, r*.1) ? 1 : 0) + (r>=4 && Math.random()<.2 ? 1 : 0);
+    for (let i=0;i<n;i++){ const h = 22 + Math.floor(Math.random()*16); game.obs.push({type:"pillar", x:GW+20+i*16, y:GROUND-h, w:14, h}); }
+  } else {
+    game.obs.push({type:"crate", x:GW+20, y:GROUND-22, w:22, h:22});
+  }
+  const minGap = game.speed * .62, maxGap = game.speed * 1.35;
+  game.nextObs = minGap + Math.random()*(maxGap-minGap);
+}
+function spawnCoins(){
+  const n = 3 + Math.floor(Math.random()*4), arc = Math.random() < .5, baseY = arc ? GROUND-30 : GROUND - (Math.random()<.5 ? 18 : 70);
+  for (let i=0;i<n;i++){
+    const y = arc ? baseY - Math.sin((i/(n-1))*Math.PI)*58 : baseY;
+    game.coins.push({x:GW+20+i*22, y, r:6, spin:Math.random()*6});
+  }
+  game.nextCoin = 180 + Math.random()*260;
+}
+function hit(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+function burst(x,y,col,n){ for(let i=0;i<n;i++) game.parts.push({x,y,vx:(Math.random()-.5)*160,vy:-Math.random()*160,life:.5+Math.random()*.3,col}); }
+
+function update(dt){
+  game.t += dt;
+  if (game.banner){ game.banner.t -= dt; if (game.banner.t <= 0) game.banner = null; }
+  if (game.flash > 0) game.flash -= dt;
+  const c = CHARS[state.selected];
+  if (game.state !== "running" || game.paused){ game.parts.forEach(p=>{p.life-=dt}); game.parts = game.parts.filter(p=>p.life>0); return; }
+  // speed & distance
+  game.speed = 300 + (game.round-1)*34 + Math.min(60, game.roundDist*0.12);
+  const dx = game.speed*dt;
+  game.dist += dx/10; game.roundDist += dx/10;
+  // round complete
+  if (game.roundDist >= ROUND_LEN(game.round)){
+    const bonus = 5*game.round;
+    state.coins += bonus; state.lifetimeCoins += bonus; game.runCoins += bonus;
+    game.round++; game.roundDist = 0;
+    game.banner = {text:"Round " + game.round, sub:"+" + bonus + " coin round bonus", t:2};
+    game.flash = .25; Saves.save(); renderHUD();
+  }
+  // physics
+  const g = game.jumpHeld && game.vy < 0 ? 1700 : 2600;
+  if (!game.onGround){ game.vy += g*dt; game.py += game.vy*dt; if (game.py >= 0){ game.py = 0; game.vy = 0; game.onGround = true; } }
+  // spawn
+  game.nextObs -= dx; if (game.nextObs <= 0) spawnObstacle();
+  game.nextCoin -= dx; if (game.nextCoin <= 0) spawnCoins();
+  game.obs.forEach(o=>{ o.x -= dx; if (o.type==="bat") o.ph += dt*12; });
+  game.coins.forEach(k=>{ k.x -= dx; k.spin += dt*6; });
+  game.obs = game.obs.filter(o=>o.x+o.w>-20);
+  // player box
+  const ph = game.ducking && game.onGround ? 22 : 38, pw = game.ducking && game.onGround ? 30 : 26;
+  const pbox = {x:PX-pw/2+3, y:GROUND+game.py-ph, w:pw-6, h:ph-2};
+  for (const o of game.obs){
+    const ob = {x:o.x+3, y:o.y+3, w:o.w-6, h:o.h-5};
+    if (hit(pbox, ob)){ burst(PX, GROUND+game.py-20, "#ffffff", 18); game.flash = .3; endRun(); return; }
+  }
+  // coins
+  const lucky = TIERS[c.tier].lucky;
+  game.coins = game.coins.filter(k=>{
+    if (k.x < -20) return false;
+    if (hit(pbox,{x:k.x-k.r,y:k.y-k.r,w:k.r*2,h:k.r*2})){
+      const dbl = Math.random() < lucky, v = dbl ? 2 : 1;
+      state.coins += v; state.lifetimeCoins += v; game.runCoins += v;
+      burst(k.x,k.y, dbl ? TIERS[c.tier].color : "#ffe08a", dbl ? 10 : 5);
+      if (dbl) game.parts.push({x:k.x,y:k.y-10,vx:0,vy:-40,life:.8,txt:"x2",col:TIERS[c.tier].color});
+      renderHUD(); return false;
+    }
+    return true;
+  });
+  // trail for legendary+
+  if (c.tier >= 4 && Math.random() < .7){
+    const col = c.tier===5 ? `hsl(${(game.t*200)%360},90%,65%)` : TIERS[4].color;
+    game.parts.push({x:PX-12, y:GROUND+game.py-10-Math.random()*20, vx:-dx/dt*0.3-40, vy:(Math.random()-.5)*30, life:.4, col, sz:2});
+  }
+  game.parts.forEach(p=>{ p.x += p.vx*dt; p.y += p.vy*dt; if(!p.txt) p.vy += 300*dt; p.life -= dt; });
+  game.parts = game.parts.filter(p=>p.life>0);
+}
+
+function drawBG(){
+  const sky = ROUND_SKIES[(game.round-1) % ROUND_SKIES.length];
+  const gr = ctx.createLinearGradient(0,0,0,GROUND); gr.addColorStop(0,sky[0]); gr.addColorStop(.6,sky[1]); gr.addColorStop(1,sky[2]);
+  ctx.fillStyle = gr; ctx.fillRect(0,0,GW,GH);
+  const scroll = game.dist*10;
+  stars.forEach(s=>{ const a=.4+.4*Math.sin(game.t*2+s.p); ctx.fillStyle=`rgba(255,248,220,${a})`; ctx.fillRect(Math.floor((s.x - scroll*.02 + GW*10)%GW), s.y, s.s, s.s); });
+  // moon
+  ctx.fillStyle="#f6eccf"; ctx.beginPath(); ctx.arc(540,46,16,0,Math.PI*2); ctx.fill(); ctx.fillStyle=sky[0]; ctx.beginPath(); ctx.arc(548,40,14,0,Math.PI*2); ctx.fill();
+  // pyramids far
+  const far = (scroll*.08) % 420;
+  ctx.fillStyle = "rgba(20,14,40,.55)";
+  for (let i=-1;i<3;i++){ const bx=i*420-far; ctx.beginPath(); ctx.moveTo(bx+60,GROUND-6); ctx.lineTo(bx+130,GROUND-78); ctx.lineTo(bx+200,GROUND-6); ctx.fill(); ctx.beginPath(); ctx.moveTo(bx+190,GROUND-6); ctx.lineTo(bx+235,GROUND-48); ctx.lineTo(bx+280,GROUND-6); ctx.fill(); }
+  // dunes mid
+  const mid = scroll*.3;
+  ctx.fillStyle = "#3a2a4a";
+  ctx.beginPath(); ctx.moveTo(0,GH);
+  for (let x=0;x<=GW;x+=8) ctx.lineTo(x, GROUND-14 - Math.sin((x+mid)/70)*8 - Math.sin((x+mid)/23)*3);
+  ctx.lineTo(GW,GH); ctx.fill();
+  // ground
+  ctx.fillStyle = "#c9a062"; ctx.fillRect(0,GROUND,GW,GH-GROUND);
+  ctx.fillStyle = "#e9c07a"; ctx.fillRect(0,GROUND,GW,3);
+  ctx.fillStyle = "#a57f48";
+  for (let i=0;i<40;i++){ const x = ((i*53 - scroll) % GW + GW) % GW; ctx.fillRect(Math.floor(x), GROUND+8+(i*7)%26, 3+(i%3), 2); }
+}
+function drawObs(o){
+  const P=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.floor(x),Math.floor(y),w,h)};
+  if (o.type === "pillar"){
+    P(o.x,o.y,o.w,o.h,"#cfc0a0"); P(o.x,o.y,o.w,3,"#efe3c6"); P(o.x+o.w-3,o.y+3,3,o.h-3,"#9a8a6c");
+    for (let y=o.y+7;y<o.y+o.h-2;y+=7) P(o.x+2,y,o.w-5,1,"#a8987a");
+    P(o.x-2,o.y-3,o.w+4,3,"#b9a988"); P(o.x+4,o.y-5,4,2,"#b9a988");
+  } else if (o.type === "crate"){
+    P(o.x,o.y,o.w,o.h,"#7a4a24"); P(o.x+2,o.y+2,o.w-4,o.h-4,"#9a5e2c"); P(o.x,o.y+o.h/2-1,o.w,2,"#e9c07a");
+    P(o.x+o.w/2-4,o.y+4,8,6,"#3fd0c9"); P(o.x+o.w/2-2,o.y+2,4,2,"#3fd0c9"); P(o.x+o.w/2-1,o.y+6,2,2,"#1d6e6a");
+  } else {
+    const flap = Math.sin(o.ph) > 0;
+    P(o.x+7,o.y+3,8,7,"#2a1d3d"); P(o.x+12,o.y+5,2,2,"#ff5a5a");
+    if (flap){ P(o.x,o.y,7,4,"#3d2a58"); P(o.x+15,o.y,7,4,"#3d2a58"); } else { P(o.x,o.y+6,7,4,"#3d2a58"); P(o.x+15,o.y+6,7,4,"#3d2a58"); }
+  }
+}
+function drawCoin(k){
+  const w = Math.max(1, Math.abs(Math.cos(k.spin))*k.r);
+  ctx.fillStyle = "#a8701c"; ctx.beginPath(); ctx.ellipse(k.x, k.y, w+1, k.r+1, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#f2b33d"; ctx.beginPath(); ctx.ellipse(k.x, k.y, w, k.r, 0, 0, Math.PI*2); ctx.fill();
+  if (w > 3){ ctx.fillStyle = "#fff3b0"; ctx.fillRect(k.x-1, k.y-k.r+2, 2, 3); }
+}
+function text(str, x, y, size, col, align){ ctx.font = `700 ${size}px "Pixelify Sans", "Courier New", monospace`; ctx.textAlign = align||"left"; ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillText(str, x+2, y+2); ctx.fillStyle = col; ctx.fillText(str, x, y); }
+function draw(){
+  ctx.setTransform(SCALE,0,0,SCALE,0,0);
+  drawBG();
+  game.obs.forEach(drawObs);
+  game.coins.forEach(drawCoin);
+  const c = CHARS[state.selected];
+  const pose = game.state !== "running" ? "idle" : (!game.onGround ? "jump" : (game.ducking ? "duck" : "run"));
+  ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(PX-12, GROUND+1, 24, 3);
+  drawChar(ctx, c, {x:PX, y:GROUND+game.py, s:2, t:game.t, pose});
+  game.parts.forEach(p=>{ ctx.globalAlpha = Math.max(0,Math.min(1,p.life*2)); if (p.txt) text(p.txt, p.x, p.y, 12, p.col, "center"); else { ctx.fillStyle=p.col; const s=p.sz||3; ctx.fillRect(p.x,p.y,s,s);} });
+  ctx.globalAlpha = 1;
+  if (game.flash > 0){ ctx.fillStyle = `rgba(255,255,255,${game.flash})`; ctx.fillRect(0,0,GW,GH); }
+  // HUD
+  if (game.state !== "ready"){
+    text("ROUND " + game.round, 14, 24, 16, "#e9c07a");
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(14,31,120,6);
+    ctx.fillStyle = "#3fd0c9"; ctx.fillRect(14,31,120*Math.min(1,game.roundDist/ROUND_LEN(game.round)),6);
+    text(fmt(Math.floor(game.dist)) + " m", GW-14, 24, 16, "#f3ead9", "right");
+    text("+" + game.runCoins + " coins", GW-14, 44, 13, "#ffe08a", "right");
+  }
+  if (game.banner && game.state === "running"){
+    const a = Math.min(1, game.banner.t*2);
+    ctx.globalAlpha = a; text(game.banner.text, GW/2, 92, 32, "#ffe08a", "center"); text(game.banner.sub, GW/2, 116, 13, "#f3ead9", "center"); ctx.globalAlpha = 1;
+  }
+  if (game.state === "ready"){
+    ctx.fillStyle = "rgba(10,10,30,.45)"; ctx.fillRect(0,0,GW,GH);
+    text("RELIC RUNNER", GW/2, 86, 34, "#e9c07a", "center");
+    text("Press Space or tap to run", GW/2, 116, 15, "#f3ead9", "center");
+    text("Grab coins · clear rounds · open chests at 100", GW/2, 138, 12, "#a9a8cf", "center");
+  }
+  if (game.state === "over"){
+    ctx.fillStyle = "rgba(10,10,30,.55)"; ctx.fillRect(0,0,GW,GH);
+    text("RUN OVER", GW/2, 74, 30, "#ff8a7a", "center");
+    text(`${fmt(Math.floor(game.dist))} m · reached round ${game.round} · +${game.runCoins} coins`, GW/2, 102, 14, "#f3ead9", "center");
+    if (game.newBest) text("New best distance!", GW/2, 124, 14, "#3fd0c9", "center");
+    text(state.coins >= 100 ? "You can open a chest below" : (100-state.coins) + " coins until your next chest", GW/2, 146, 12, "#ffe08a", "center");
+    text("Press Space or tap to run again", GW/2, 174, 13, "#a9a8cf", "center");
+  }
+  if (game.paused){ ctx.fillStyle = "rgba(10,10,30,.5)"; ctx.fillRect(0,0,GW,GH); text("PAUSED", GW/2, 110, 28, "#f3ead9", "center"); text("Press P or Jump to continue", GW/2, 134, 12, "#a9a8cf", "center"); }
+}
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.033, (now-last)/1000); last = now;
+  update(dt); draw();
+  if (!chestBusy && $("reveal").hidden) drawChest(false, now/1000);
+  else if (!$("reveal").hidden) drawChest(true, now/1000);
+  // animate the current-runner preview and legendary/mythic cards
+  if (Math.floor(now/50) !== frame.k){ frame.k = Math.floor(now/50); renderNow(); cardCanvases.forEach(({ctx:cx,c})=>{ cx.clearRect(0,0,128,128); drawChar(cx,c,{x:64,y:104,s:3.6,t:now/1000}); });
+    if (!$("reveal").hidden && lastPull){ const rc=setupCanvas($("revealCv")); rc.clearRect(0,0,240,240); drawChar(rc,lastPull,{x:120,y:210,s:7,t:now/1000}); } }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- input ---------- */
+const typing = () => { const a = document.activeElement; return a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT"); };
+document.addEventListener("keydown", e => {
+  if (typing()) return;
+  if (e.code==="Space"||e.code==="ArrowUp"||e.code==="KeyW"){ e.preventDefault(); if (!e.repeat) jumpPress(); }
+  else if (e.code==="ArrowDown"||e.code==="KeyS"){ e.preventDefault(); duck(true); }
+  else if (e.code==="KeyP" && game.state==="running"){ game.paused = !game.paused; }
+});
+document.addEventListener("keyup", e => {
+  if (e.code==="Space"||e.code==="ArrowUp"||e.code==="KeyW") jumpRelease();
+  else if (e.code==="ArrowDown"||e.code==="KeyS") duck(false);
+});
+cv.addEventListener("pointerdown", e => { e.preventDefault(); jumpPress(); });
+cv.addEventListener("pointerup", jumpRelease);
+const pad = (el, down, up) => {
+  el.addEventListener("pointerdown", e => { e.preventDefault(); el.classList.add("on"); el.setPointerCapture?.(e.pointerId); down(); });
+  const off = () => { if (el.classList.contains("on")){ el.classList.remove("on"); up(); } };
+  el.addEventListener("pointerup", off); el.addEventListener("pointercancel", off); el.addEventListener("lostpointercapture", off);
+  el.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); e.stopPropagation(); if(!e.repeat) down(); } });
+  el.addEventListener("keyup", e => { if (e.key==="Enter"||e.key===" "){ e.stopPropagation(); up(); } });
+};
+pad($("padJump"), jumpPress, jumpRelease);
+pad($("padDuck"), () => duck(true), () => duck(false));
+document.addEventListener("visibilitychange", () => { if (document.hidden && game.state==="running") game.paused = true; });
+
+/* ============================== BOOT ============================== */
+function bootLocal(){
+  const list = Saves.profiles();
+  if (!LS.get(PREFIX+"profiles")) Saves.setProfiles(list);
+  const cur = LS.get(PREFIX+"current");
+  Saves.profile = list.includes(cur) ? cur : list[0];
+  state = Saves.loadLocal(Saves.profile);
+  setSaveStatus("local");
+}
+bootLocal();
+resetRun(); game.state = "ready";
+renderAll();
+requestAnimationFrame(frame);
+bootFirebase();
+function authError(e){
+  const m = {
+    "auth/invalid-credential":"That email and password don't match. Check them or reset your password.",
+    "auth/wrong-password":"That email and password don't match. Check them or reset your password.",
+    "auth/user-not-found":"No account uses that email yet. Choose Create account.",
+    "auth/email-already-in-use":"An account already uses that email. Choose Log in instead.",
+    "auth/weak-password":"Use a password with at least 6 characters.",
+    "auth/invalid-email":"Enter a full email address, like name@example.com.",
+    "auth/missing-password":"Enter your password.",
+    "auth/too-many-requests":"Too many tries. Wait a few minutes, then try again.",
+    "auth/popup-closed-by-user":"Google sign-in was closed before it finished.",
+    "auth/popup-blocked":"Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.",
+    "auth/unauthorized-domain":"This website isn't on the Firebase list of authorized domains yet (Authentication > Settings).",
+    "auth/operation-not-allowed":"This sign-in method isn't turned on in Firebase yet (Authentication > Sign-in method).",
+  };
+  return m[e && e.code] || ("Sign-in didn't work: " + ((e && e.message) || "unknown error"));
+}
+function bootFirebase(){
+  const cfg = window.FIREBASE_CONFIG;
+  if (!window.firebase || !cfg || !cfg.apiKey || cfg.apiKey.startsWith("PASTE")){ setSaveStatus("nosetup"); return; }
+  let auth, fs;
+  try { firebase.initializeApp(cfg); auth = firebase.auth(); fs = firebase.firestore(); }
+  catch (e) { setSaveStatus("nosetup"); return; }
+  Saves.auth = auth; Saves.fs = fs;
+  renderAccount();
+  const msg = t => { $("authMsg").textContent = t; };
+  const creds = () => [$("authEmail").value.trim(), $("authPass").value];
+  $("authBox").addEventListener("submit", async e => {
+    e.preventDefault(); const [em, pw] = creds(); msg("Logging in…");
+    try { await auth.signInWithEmailAndPassword(em, pw); msg(""); } catch (err) { msg(authError(err)); }
+  });
+  $("authSignup").addEventListener("click", async () => {
+    const [em, pw] = creds(); msg("Creating your account…");
+    try { await auth.createUserWithEmailAndPassword(em, pw); msg(""); } catch (err) { msg(authError(err)); }
+  });
+  $("authGoogle").addEventListener("click", async () => {
+    msg("");
+    try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (err) { msg(authError(err)); }
+  });
+  $("authReset").addEventListener("click", async () => {
+    const em = $("authEmail").value.trim();
+    if (!em){ msg("Type your email above, then choose Forgot password."); return; }
+    try { await auth.sendPasswordResetEmail(em); msg("Check your email for a link to reset your password."); } catch (err) { msg(authError(err)); }
+  });
+  $("logoutBtn").addEventListener("click", () => auth.signOut());
+
+  auth.onAuthStateChanged(async u => {
+    if (!u){
+      if (Saves.mode === "fire"){ if (game.state === "running") endRun(); Saves.mode = "local"; Saves.uid = null; bootLocal(); renderAll(); toast("Logged out"); }
+      else setSaveStatus("local");
+      renderAccount(); return;
+    }
+    setSaveStatus("saving"); $("saveText").textContent = "Loading your account…";
+    try {
+      const snap = await fs.collection("saves").doc(u.uid).get();
+      const inRun = game.state === "running" ? game.runCoins : 0;
+      Saves.uid = u.uid; Saves.mode = "fire";
+      if (snap.exists){
+        state = sanitize(snap.data()); state.coins += inRun; state.lifetimeCoins += inRun;
+        setSaveStatus("ok"); if (inRun) Saves.save();
+      } else {
+        Saves.save(true);   // first login: carry this device's progress into the new account
+      }
+      $("whoName").textContent = u.displayName || u.email || "Player";
+      renderAll(); toast("Welcome, " + (u.displayName || u.email || "runner"));
+    } catch (e) {
+      Saves.mode = "local"; setSaveStatus("fallback"); renderAccount();
+      msg("Logged in, but your save couldn't load. Check the Firestore rules, then reload.");
+    }
+  });
+}
+})();
+</script>
+</body></html>
