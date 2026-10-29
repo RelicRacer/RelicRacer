@@ -957,35 +957,54 @@ const Sound = (() => {
     click(){ if (!ok()) return; tone(660, .05, {type:"square", vol:.07}); },
   };
 
-  /* ---- music: a looping synthwave track, 104 BPM, Am - F - C - G ---- */
-  const BPM = 104, STEP = 60 / BPM / 4;            // 16th notes
-  const CHORDS = [[57,60,64],[53,57,60],[48,52,55],[55,59,62]];   // MIDI: Am, F, C, G
-  const LEAD = [69,72,76,72, 69,72,76,79, 77,76,72,69, 72,71,67,64];
+  /* ---- music: one looping track for the city, plus one for each Mythic world ---- */
+  const SONGS = {
+    "Miami Nights":       { bpm:104, chords:[[57,60,64],[53,57,60],[48,52,55],[55,59,62]], lead:[69,72,76,72, 69,72,76,79, 77,76,72,69, 72,71,67,64],
+                            bass:"sawtooth", bassCut:700, arp:"square", arpEvery:2, leadType:"triangle", kick:[0,4,8,12], snare:[4,12], hat:2, padVol:.035 },
+    "Volcano Night":      { bpm:92,  chords:[[52,55,59],[53,57,60],[52,55,59],[50,53,57]], lead:[64,65,64,62, 64,67,65,64, 62,60,62,64, 59,60,62,64],
+                            bass:"sawtooth", bassCut:420, arp:"sawtooth", arpEvery:4, leadType:"sawtooth", kick:[0,3,8,11], snare:[4,12], hat:4, padVol:.045, tom:true },
+    "Synthwave Grid":     { bpm:112, chords:[[53,56,60],[49,53,56],[56,60,63],[51,55,58]], lead:[72,75,77,80, 77,75,72,68, 70,72,75,72, 70,68,67,68],
+                            bass:"sawtooth", bassCut:900, arp:"square", arpEvery:1, leadType:"square", kick:[0,4,8,12], snare:[4,12], hat:2, padVol:.04 },
+    "Golden Hour":        { bpm:92,  chords:[[48,52,55,59],[45,48,52,55],[41,45,48,52],[43,47,50,53]], lead:[76,74,72,71, 72,69,67,69, 72,74,76,79, 77,76,74,72],
+                            bass:"triangle", bassCut:600, arp:"triangle", arpEvery:2, leadType:"sine", kick:[0,10], snare:[4,12], hat:4, padVol:.04, soft:true },
+    "Neo City 2099":      { bpm:120, chords:[[50,53,57],[46,50,53],[48,52,55],[45,48,52]], lead:[74,77,81,77, 74,72,74,77, 76,72,69,72, 76,77,76,72],
+                            bass:"square", bassCut:800, arp:"square", arpEvery:1, leadType:"square", kick:[0,4,8,12], snare:[4,12], hat:1, padVol:.03, octArp:true },
+    "Night Race Circuit": { bpm:128, chords:[[52,59,64],[48,55,60],[55,62,67],[50,57,62]], lead:[76,79,76,74, 72,74,76,79, 81,79,76,74, 76,74,71,74],
+                            bass:"sawtooth", bassCut:1000, arp:"sawtooth", arpEvery:2, leadType:"sawtooth", kick:[0,4,8,12], snare:[4,12], hat:2, padVol:.03, offHat:true, bass16:true },
+  };
   const hz = m => 440 * Math.pow(2, (m - 69)/12);
+  let song = SONGS["Miami Nights"], STEP = 60 / song.bpm / 4;
   let playing = false, step = 0, nextT = 0, timer = null;
   function schedule(){
     while (nextT < ac.currentTime + .15){
-      const bar = Math.floor(step / 16) % 4, s = step % 16, ch = CHORDS[bar], at = nextT - ac.currentTime;
-      const B = musicBus;
+      const S = song, bar = Math.floor(step / 16) % 4, s = step % 16, ch = S.chords[bar], at = nextT - ac.currentTime, B = musicBus;
       // drums
-      if (s % 4 === 0){ tone(110, .22, {type:"sine", vol:.55, at, slide:40, bus:B}); }
-      if (s === 4 || s === 12){ noise(.18, {vol:.22, at, hp:1500, bus:B}); tone(190, .1, {type:"triangle", vol:.12, at, bus:B}); }
-      if (s % 2 === 0) noise(.04, {vol: s % 4 === 2 ? .09 : .05, at, hp:7000, bus:B});
-      // bass: driving eighths, octave bounce
-      if (s % 2 === 0){ const root = ch[0] - 24 + (s % 4 === 2 ? 12 : 0); tone(hz(root), STEP*1.8, {type:"sawtooth", vol:.16, at, cutoff:700, bus:B}); }
+      if (S.kick.includes(s)) tone(110, .22, {type:"sine", vol: S.soft ? .38 : .55, at, slide:40, bus:B});
+      if (S.snare.includes(s)){ noise(S.soft ? .12 : .18, {vol: S.soft ? .12 : .22, at, hp: S.soft ? 2500 : 1500, bus:B}); tone(190, .1, {type:"triangle", vol:.12, at, bus:B}); }
+      if (S.tom && (s === 14 || s === 15)) tone(s === 14 ? 140 : 105, .2, {type:"sine", vol:.35, at, slide:70, bus:B});
+      if (s % S.hat === 0) noise(.04, {vol: S.soft ? .03 : (s % 4 === 2 ? .09 : .05), at, hp:7000, bus:B});
+      if (S.offHat && s % 4 === 2) noise(.08, {vol:.07, at, hp:6000, bus:B});
+      // bass
+      const bassStep = S.bass16 ? 1 : 2;
+      if (s % bassStep === 0){ const root = ch[0] - 24 + (!S.bass16 && s % 4 === 2 ? 12 : 0); tone(hz(root), STEP*(bassStep*.9), {type:S.bass, vol: S.soft ? .14 : .16, at, cutoff:S.bassCut, bus:B}); }
       // pad at the start of each bar
-      if (s === 0) ch.forEach(n => { [-.06, .06].forEach(det => { const g = tone(hz(n) * (1 + det/100), STEP*16, {type:"sawtooth", vol:.035, at, attack:.4, cutoff:1300, bus:B}); }); });
+      if (s === 0) ch.forEach(n => [-.06, .06].forEach(det => tone(hz(n) * (1 + det/100), STEP*16, {type: S.soft ? "triangle" : "sawtooth", vol:S.padVol, at, attack:.4, cutoff:1300, bus:B})));
       // arpeggio into the echo
-      if (s % 2 === 1){ const n = ch[(s >> 1) % 3] + 12; const g = tone(hz(n), STEP*1.4, {type:"square", vol:.05, at, cutoff:2500, bus:B}); if (g) g.connect(delay); }
-      // simple lead every other loop
-      if (Math.floor(step / 64) % 2 === 1 && s % 4 === 0){ tone(hz(LEAD[(bar*4 + s/4) % 16]), STEP*3.5, {type:"triangle", vol:.09, at, cutoff:3000, bus:B}); }
+      if (s % S.arpEvery === (S.arpEvery > 1 ? 1 : 0)){
+        const idx = Math.floor(s / S.arpEvery) % ch.length; const n = ch[idx] + 12 + (S.octArp && (s >> 2) % 2 ? 12 : 0);
+        const g = tone(hz(n), STEP*1.3, {type:S.arp, vol: S.arpEvery === 1 ? .035 : .05, at, cutoff:2500, bus:B}); if (g) g.connect(delay);
+      }
+      // lead melody every other loop
+      if (Math.floor(step / 64) % 2 === 1 && s % 4 === 0) tone(hz(S.lead[(bar*4 + s/4) % 16]), STEP*3.5, {type:S.leadType, vol: S.leadType === "sawtooth" ? .06 : .09, at, cutoff:3000, bus:B});
       step++; nextT += STEP;
     }
   }
+  function pickSong(name){ song = SONGS[name] || SONGS["Miami Nights"]; STEP = 60 / song.bpm / 4; }
   function musicTarget(){ return prefs.music && playing ? MUSIC_VOL : 0; }
   function fadeMusic(to, secs){ if (!ac) return; const t = ac.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setValueAtTime(musicBus.gain.value, t); musicBus.gain.linearRampToValueAtTime(to, t + secs); }
-  function musicStart(){
+  function musicStart(name){
     if (!wake()) return;
+    if (name && SONGS[name] !== song){ pickSong(name); step = 0; }
     if (!playing){ playing = true; step = 0; nextT = ac.currentTime + .08; clearInterval(timer); timer = setInterval(schedule, 25); }
     fadeMusic(musicTarget(), .6);
   }
@@ -1145,7 +1164,7 @@ function resetRun(){
   Object.assign(game, {t:0, speed:320, dist:0, round:1, roundDist:0, runCoins:0, py:0, vy:0, onGround:true, obs:[], coins:[], parts:[], smoke:[], nextObs:420, nextCoin:260, banner:{text:"Round 1", sub: themeFor(curCar()) ? themeFor(curCar()).world : (TEST.on ? "Test drive" : "Go!"), t:1.8}, flash:0, paused:false});
 }
 function startRun(){
-  resetRun(); game.state = "running"; $("overCta").hidden = true; Sound.musicStart();
+  resetRun(); game.state = "running"; $("overCta").hidden = true; Sound.musicStart(themeFor(curCar()) ? themeFor(curCar()).world : "Miami Nights");
   // Bring the whole game screen and buttons into view when a run starts
   if (!document.body.classList.contains("fs")) { const r = document.querySelector(".cabinet").getBoundingClientRect(); if (r.top < 0 || r.bottom > window.innerHeight) document.querySelector(".cabinet").scrollIntoView({behavior:"smooth", block: r.height > window.innerHeight ? "start" : "center"}); }
 }
