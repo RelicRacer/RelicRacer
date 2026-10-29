@@ -936,7 +936,7 @@ window.addEventListener("resize", sizeGame);
 window.addEventListener("orientationchange", () => setTimeout(sizeGame, 200));
 const ROUND_LEN = r => 220 + r*80;           // meters per round
 // Miami night skies, one per round: [top, middle, horizon glow]
-const ROUND_SKIES = [["#0d0b2a","#3a1460","#ff4fa3"],["#090a24","#251a66","#8a5cff"],["#07102a","#0f3a5c","#2de2e6"],["#140a2a","#4a1450","#ff8a3d"],["#0a0820","#2a0f4a","#ff2e88"]];
+const ROUND_SKIES = [["#0d0b2a","#2c1450","#7a3266"],["#090a24","#211a55","#4e3a8a"],["#07102a","#0f2c48","#1f5f6e"],["#140a2a","#381445","#7a4438"],["#0a0820","#250f42","#73264f"]];
 // City skyline (two layers) and palms, generated once
 const rnd = (a => () => (a = (a * 16807) % 2147483647) / 2147483647)(42);
 const SKY_FAR = Array.from({length:22}, (_, i) => ({w: 22 + Math.floor(rnd()*26), h: 40 + Math.floor(rnd()*70), seed: i}));
@@ -1079,15 +1079,15 @@ function drawBG(){
   const gr = ctx.createLinearGradient(0,0,0,GROUND); gr.addColorStop(0,sky[0]); gr.addColorStop(.62,sky[1]); gr.addColorStop(1,sky[2]);
   ctx.fillStyle = gr; ctx.fillRect(0,0,GW,GH);
   const scroll = game.dist*10;
-  stars.forEach(st=>{ const a=.35+.4*Math.sin(game.t*2+st.p); ctx.fillStyle=`rgba(255,240,255,${a})`; ctx.fillRect(Math.floor((st.x - scroll*.02 + GW*10)%GW), st.y*.7, st.s, st.s); });
+  stars.forEach(st=>{ const a=.2+.2*Math.sin(game.t*2+st.p); ctx.fillStyle=`rgba(255,240,255,${a})`; ctx.fillRect(Math.floor((st.x - scroll*.02 + GW*10)%GW), st.y*.7, st.s, st.s); });
   // moon
-  ctx.save(); ctx.shadowColor = "rgba(255,200,240,.6)"; ctx.shadowBlur = 18;
-  ctx.fillStyle="#ffe9f6"; ctx.beginPath(); ctx.arc(GW-170,52,14,0,Math.PI*2); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.shadowColor = "rgba(255,200,240,.25)"; ctx.shadowBlur = 10;
+  ctx.fillStyle="#e9d6e4"; ctx.beginPath(); ctx.arc(GW-170,52,14,0,Math.PI*2); ctx.fill(); ctx.restore();
   ctx.fillStyle=sky[0]; ctx.beginPath(); ctx.arc(GW-163,47,12,0,Math.PI*2); ctx.fill();
   // far skyline
   const span = (arr) => arr.reduce((t,b) => t + b.w + 4, 0);
   const farW = span(SKY_FAR), farOff = (scroll*.08) % farW;
-  ctx.fillStyle = "rgba(30,14,60,.85)";
+  ctx.fillStyle = "rgba(34,20,62,.8)";
   for (let rep = 0; rep < 3; rep++){ let x = -farOff + rep*farW; SKY_FAR.forEach(bd => { if (x < GW && x + bd.w > 0) ctx.fillRect(Math.floor(x), GROUND-14-bd.h, bd.w, bd.h+14); x += bd.w + 4; }); }
   // near skyline with lit windows and a neon roof line
   const nearW = span(SKY_NEAR), nearOff = (scroll*.18) % nearW;
@@ -1096,10 +1096,10 @@ function drawBG(){
     SKY_NEAR.forEach(bd => {
       if (x < GW && x + bd.w > 0){
         const top = GROUND-10-bd.h, X = Math.floor(x);
-        ctx.fillStyle = "#1a0f33"; ctx.fillRect(X, top, bd.w, bd.h+10);
-        ctx.fillStyle = bd.neon; ctx.fillRect(X, top, bd.w, 1);
+        ctx.fillStyle = "#1e1438"; ctx.fillRect(X, top, bd.w, bd.h+10);
+        ctx.globalAlpha = .35; ctx.fillStyle = bd.neon; ctx.fillRect(X, top, bd.w, 1); ctx.globalAlpha = 1;
         for (let wy = top+5; wy < GROUND-14; wy += 6) for (let wx = X+3; wx < X+bd.w-3; wx += 5)
-          if (((wx*7 + wy*13 + bd.seed*31) % 11) < 4){ ctx.fillStyle = ((wx+wy+bd.seed) % 3) ? "rgba(255,214,120,.75)" : "rgba(130,230,255,.75)"; ctx.fillRect(wx, wy, 2, 2); }
+          if (((wx*7 + wy*13 + bd.seed*31) % 11) < 2){ ctx.fillStyle = ((wx+wy+bd.seed) % 3) ? "rgba(230,190,120,.28)" : "rgba(140,200,230,.24)"; ctx.fillRect(wx, wy, 2, 2); }
       }
       x += bd.w + 4;
     });
@@ -1109,17 +1109,17 @@ function drawBG(){
   for (let px = -pOff - 20; px < GW + 40; px += palmGap) drawPalm(Math.floor(px), GROUND-4);
   // sidewalk + neon curb
   ctx.fillStyle = "#2a1a44"; ctx.fillRect(0, GROUND-6, GW, 6);
-  ctx.save(); ctx.shadowColor = "#ff4fa3"; ctx.shadowBlur = 8; ctx.fillStyle = "#ff4fa3"; ctx.fillRect(0, GROUND-1, GW, 2); ctx.restore();
+  ctx.fillStyle = "#9a3a72"; ctx.fillRect(0, GROUND-1, GW, 2);
   // road
   const rg = ctx.createLinearGradient(0,GROUND,0,GH); rg.addColorStop(0,"#211a38"); rg.addColorStop(1,"#120e22");
   ctx.fillStyle = rg; ctx.fillRect(0, GROUND+1, GW, GH-GROUND);
   // lane dashes
   const dashOff = scroll % 44;
-  ctx.fillStyle = "rgba(255,230,160,.85)";
+  ctx.fillStyle = "rgba(220,200,150,.5)";
   for (let x = -dashOff; x < GW; x += 44) ctx.fillRect(Math.floor(x), GROUND+18, 22, 3);
   // reflections of the neon on wet asphalt
-  ctx.fillStyle = "rgba(45,226,230,.10)"; for (let x = -(scroll*.5 % 90); x < GW; x += 90) ctx.fillRect(Math.floor(x), GROUND+6, 30, 1);
-  ctx.fillStyle = "rgba(255,79,163,.10)"; for (let x = -(scroll*.5 % 70) + 30; x < GW; x += 70) ctx.fillRect(Math.floor(x), GROUND+28, 24, 1);
+  ctx.fillStyle = "rgba(45,226,230,.05)"; for (let x = -(scroll*.5 % 90); x < GW; x += 90) ctx.fillRect(Math.floor(x), GROUND+6, 30, 1);
+  ctx.fillStyle = "rgba(255,79,163,.05)"; for (let x = -(scroll*.5 % 70) + 30; x < GW; x += 70) ctx.fillRect(Math.floor(x), GROUND+28, 24, 1);
 }
 function drawPalm(x, base){
   ctx.fillStyle = "#12091f";
