@@ -94,10 +94,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .chest-full{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;overflow:hidden;
   background:radial-gradient(circle at 50% 45%, #2c2766 0, #0b0b20 75%);
   padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
-.cf-rays{position:absolute;left:50%;top:44%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;opacity:0;transition:opacity .4s;
+.cf-rays{position:absolute;left:50%;top:44%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;opacity:0;transition:none;
   background:repeating-conic-gradient(from 0deg, var(--cf, #ffd34d) 0deg 7deg, transparent 7deg 22deg);
   -webkit-mask:radial-gradient(circle, #000 0, transparent 55%);mask:radial-gradient(circle, #000 0, transparent 55%);animation:spin 18s linear infinite}
-.chest-full.revealed .cf-rays{opacity:var(--rayop,.28);animation-duration:var(--rayspd,18s)}
+.chest-full.revealed .cf-rays{opacity:var(--rayop,.28);animation-duration:var(--rayspd,18s);transition:opacity .4s}
 .chest-full[data-tier="5"].revealed .cf-rays{background:repeating-conic-gradient(from 0deg, #ff4f6b 0 6deg, transparent 6deg 15deg, #ffd34d 15deg 21deg, transparent 21deg 30deg, #5fe03a 30deg 36deg, transparent 36deg 45deg, #2de2e6 45deg 51deg, transparent 51deg 60deg, #b77bff 60deg 66deg, transparent 66deg 75deg)}
 .cf-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .cf-inner{z-index:3}
@@ -126,8 +126,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @keyframes rise{to{opacity:1;transform:none}}
 .cf-chest{width:min(52vw,230px);height:min(52vw,230px);margin-top:-14%}
 .chest-full.shaking .cf-chest{animation:shake .12s linear infinite}
-.cf-info{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;opacity:0;transform:translateY(10px);transition:opacity .4s .35s, transform .4s .35s}
-.chest-full.revealed .cf-info{opacity:1;transform:none}
+.cf-info{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;opacity:0;transform:translateY(10px);transition:none;visibility:hidden}
+.chest-full.revealed .cf-info{opacity:1;transform:none;visibility:visible;transition:opacity .4s .35s, transform .4s .35s}
 .cf-tier{font-family:var(--display);font-size:clamp(18px,5vw,24px);letter-spacing:.14em;text-transform:uppercase;padding:4px 16px;border-radius:999px;border:2px solid currentColor}
 .cf-name{font-family:var(--display);font-weight:700;font-size:clamp(30px,9vw,46px);line-height:1.05;text-wrap:balance}
 .cf-note{color:var(--muted);font-size:16px}
@@ -335,7 +335,7 @@ window.FIREBASE_CONFIG = {
   </section>
 
   <section class="cabinet" aria-label="Game">
-    <div class="screen"><div class="fs-bar"><button class="snd-btn" data-snd="music" type="button" aria-pressed="true">Music: On</button><button class="fs-exit" id="fsExit" type="button">Exit</button><button class="snd-btn" data-snd="sfx" type="button" aria-pressed="true">Sound: On</button></div><div class="over-cta" id="overCta" hidden>
+    <div class="screen"><div class="fs-bar"><button class="fs-exit" id="fsExit" type="button">Exit</button><button class="snd-btn" data-snd="sfx" type="button" aria-pressed="true">Sound: On</button></div><div class="over-cta" id="overCta" hidden>
       <div class="oc-card">
         <h3>Crashed! <span id="ocSum"></span></h3>
         <p>You're not signed in, so your coins and cars are only saved on this device. Sign up to save your progress, keep your coins, save your cars and get on today's leaderboard.</p>
@@ -347,7 +347,7 @@ window.FIREBASE_CONFIG = {
       <div class="runner-now"><canvas id="nowCv" width="112" height="64"></canvas><div>Driving <b id="nowName">—</b><br><span id="nowPerk"></span></div></div>
       <div class="keys"><kbd>Space</kbd>, <kbd>↑</kbd> or click to jump (hold for higher) · <kbd>P</kbd> pause</div>
       <div class="tap-hint">Tap the game to jump. Hold for a higher jump.</div>
-      <div class="snd"><button class="snd-btn" data-snd="music" type="button" aria-pressed="true">Music: On</button><button class="snd-btn" data-snd="sfx" type="button" aria-pressed="true">Sound: On</button></div>
+      <div class="snd"><button class="snd-btn" data-snd="sfx" type="button" aria-pressed="true">Sound: On</button></div>
     </div>
   </section>
 
@@ -975,7 +975,7 @@ function renderHUD(){
   const c = curCar();
   $("nowName").textContent = c.name; $("nowName").classList.toggle("creator", isCreator(c));
   $("nowName").style.color = TIERS[c.tier].color;
-  $("nowPerk").textContent = TIERS[c.tier].name + (themeFor(c) ? " · " + themeFor(c).world : "") + " · ♪ " + Sound.genreName(c);
+  $("nowPerk").textContent = TIERS[c.tier].name + (themeFor(c) ? " · " + themeFor(c).world : "");
   $("chestBar").style.width = Math.min(100, state.coins) + "%";
   const can = state.coins >= 100 && !chestBusy;
   $("openChest").disabled = !can;
@@ -1103,19 +1103,15 @@ $("loadYes").addEventListener("click", () => {
    Everything is synthesized with the Web Audio API: no audio files, nothing to license.
    Browsers only allow sound after the player taps or presses a key, so the engine wakes up on the first input. */
 const Sound = (() => {
-  let ac = null, master, musicBus, sfxBus, noiseBuf, delay;
-  const prefs = { music: LS.get(PREFIX + "music") !== "off", sfx: LS.get(PREFIX + "sfx") !== "off" };
-  const MUSIC_VOL = .32, SFX_VOL = .55;
+  let ac = null, master, sfxBus, noiseBuf;
+  const prefs = { sfx: LS.get(PREFIX + "sfx") !== "off" };
+  const SFX_VOL = .55;
   function wake(){
     if (!ac){
       const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
       try { ac = new C(); } catch { return null; }
       master = ac.createGain(); master.gain.value = .9; master.connect(ac.destination);
-      musicBus = ac.createGain(); musicBus.gain.value = 0; musicBus.connect(master);
       sfxBus = ac.createGain(); sfxBus.gain.value = prefs.sfx ? SFX_VOL : 0; sfxBus.connect(master);
-      // a soft echo for the arpeggio
-      delay = ac.createDelay(1); delay.delayTime.value = .43; const fb = ac.createGain(); fb.gain.value = .32;
-      const dl = ac.createGain(); dl.gain.value = .35; delay.connect(fb); fb.connect(delay); delay.connect(dl); dl.connect(musicBus);
       noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
       const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
     }
@@ -1172,230 +1168,25 @@ const Sound = (() => {
     click(){ if (!ok()) return; tone(660, .05, {type:"square", vol:.07}); },
   };
 
-  /* ==== MUSIC ENGINE: fast electronic tracks in six genres. Every car gets its own song. ====
-     Rounds act like a song's structure: 1 intro, 2 build, 3 the DROP, 4-5 extra layers + faster. */
-  let pump = null;                                  // sidechain "pump" bus: ducks on every kick
-  function pumpBus(){ if (!pump){ pump = ac.createGain(); pump.gain.value = 1; pump.connect(musicBus); } return pump; }
-  const hz = m => 440 * Math.pow(2, (m - 69)/12);
-  const B = () => musicBus;
-
-  // ---- instruments ----
-  function kick(at, kind){
-    const t = ac.currentTime + at;
-    if (kind === "chip"){ tone(160, .12, {type:"square", vol:.42, at, slide:45, bus:B(), cutoff:1200}); }
-    else if (kind === "808"){ tone(65, .9, {type:"sine", vol:.6, at, slide:42, bus:B()}); tone(140, .06, {type:"triangle", vol:.25, at, slide:60, bus:B()}); }
-    else { tone(150, .28, {type:"sine", vol:.7, at, slide:42, bus:B()}); noise(.02, {vol:.25, at, hp:3000, bus:B()}); }
-    if (pump){ pump.gain.cancelScheduledValues(t); pump.gain.setValueAtTime(.25, t); pump.gain.linearRampToValueAtTime(1, t + STEP*3); }
-  }
-  function snare(at, kind){
-    if (kind === "chip"){ noise(.09, {vol:.32, at, hp:2000, bus:B()}); return; }
-    if (kind === "clap"){ [0, .012, .024].forEach(d => noise(.12, {vol:.2, at: at + d, hp:1200, lp:6000, bus:B()})); return; }
-    noise(.2, {vol:.3, at, hp:1200, bus:B()}); tone(200, .1, {type:"triangle", vol:.2, at, slide:150, bus:B()});
-  }
-  function hat(at, open, vol){ noise(open ? .14 : .035, {vol: vol || (open ? .08 : .06), at, hp:8000, bus:B()}); }
-  function crash(at){ noise(1.4, {vol:.18, at, hp:5000, bus:B()}); }
-  function riser(at, dur){
-    const t = ac.currentTime + at, s = ac.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
-    const f = ac.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 3; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(9000, t + dur);
-    const g = ac.createGain(); g.gain.setValueAtTime(.001, t); g.gain.exponentialRampToValueAtTime(.16, t + dur);
-    s.connect(f); f.connect(g); g.connect(B()); s.start(t); s.stop(t + dur + .02);
-  }
-  function impact(at){ tone(55, 1.2, {type:"sine", vol:.6, at, slide:30, bus:B()}); crash(at); }
-  // a stack of detuned saws (the classic big EDM lead / chord sound)
-  function supersaw(notes, at, dur, vol, cutoff, toPump, attack){
-    const t = ac.currentTime + at, out = ac.createGain(), f = ac.createBiquadFilter();
-    f.type = "lowpass"; f.frequency.value = cutoff || 3000; f.connect(out);
-    out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(vol, t + (attack || .01)); out.gain.setValueAtTime(vol, t + dur*.7); out.gain.exponentialRampToValueAtTime(.0008, t + dur);
-    out.connect(toPump ? pumpBus() : B());
-    notes.forEach(n => [-14, 0, 14].forEach(cents => { const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(n); o.detune.value = cents; o.connect(f); o.start(t); o.stop(t + dur + .03); }));
-    return out;
-  }
-  function pluck(n, at, dur, vol, type){
-    const t = ac.currentTime + at, o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
-    o.type = type || "sawtooth"; o.frequency.value = hz(n); f.type = "lowpass"; f.Q.value = 4;
-    f.frequency.setValueAtTime(5000, t); f.frequency.exponentialRampToValueAtTime(400, t + dur);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
-    o.connect(f); f.connect(g); g.connect(B()); o.start(t); o.stop(t + dur + .02); return g;
-  }
-  function wobble(n, at, dur, rate, vol){
-    const t = ac.currentTime + at, f = ac.createBiquadFilter(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain();
-    f.type = "lowpass"; f.Q.value = 9; f.frequency.value = 500; lfo.type = "sine"; lfo.frequency.value = rate; lg.gain.value = 1100;
-    lfo.connect(lg); lg.connect(f.frequency);
-    [["sawtooth",0],["square",-1200],["sawtooth",8]].forEach(([ty,det]) => { const o = ac.createOscillator(); o.type = ty; o.frequency.value = hz(n); o.detune.value = det; o.connect(f); o.start(t); o.stop(t + dur + .02); });
-    g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur*.9); g.gain.linearRampToValueAtTime(.0008, t + dur);
-    f.connect(g); g.connect(B()); lfo.start(t); lfo.stop(t + dur + .02);
-  }
-  function reese(n, at, dur, vol){
-    const t = ac.currentTime + at, f = ac.createBiquadFilter(), g = ac.createGain();
-    f.type = "lowpass"; f.frequency.value = 520; f.Q.value = 2;
-    [-18, 18].forEach(c => { const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = hz(n); o.detune.value = c; o.connect(f); o.start(t); o.stop(t + dur + .02); });
-    tone(hz(n - 12), dur, {type:"sine", vol: vol*.9, at, bus:B()});
-    g.gain.setValueAtTime(vol, t); g.gain.setValueAtTime(vol, t + dur*.85); g.gain.linearRampToValueAtTime(.0008, t + dur);
-    f.connect(g); g.connect(pumpBus());
-  }
-  function bass808(n, at, dur, slideFrom){ tone(hz(slideFrom || n), dur, {type:"sine", vol:.55, at, slide: hz(n), bus:pumpBus()}); tone(hz(n + 12), dur*.5, {type:"triangle", vol:.08, at, bus:pumpBus()}); }
-  function leadNote(S, n, at, dur){
-    const L = S.lead;
-    if (L.kind === "supersaw") supersaw([n], at, dur, .07, L.cutoff, false);
-    else if (L.kind === "pluck") pluck(n, at, Math.max(dur, .18), .1, L.wave);
-    else { const g = tone(hz(n), dur, {type:L.wave, vol: L.wave === "square" ? .07 : .1, at, cutoff:L.cutoff, bus:B()}); if (g && L.echo) g.connect(delay); }
-  }
-
-  // ---- genres: each decides what plays on each 16th-note step ----
-  const GENRES = {
-    electro: { name:"Electro House", bpm:[126,130], step(S, b, s, at, lvl){
-      const ch = S.chords[b];
-      kick(at); if (s === 4 || s === 12) snare(at, "clap");
-      if (s % 4 === 2) hat(at, true);
-      if (lvl >= 3 && s % 2 === 1) hat(at, false, .04);
-      if (s === 0) supersaw(ch, at, STEP*15, lvl >= 2 ? .05 : .035, lvl >= 2 ? 4200 : 1600, true, .02);
-      if (lvl >= 1 && s % 4 === 2) tone(hz(ch[0] - 24), STEP*1.6, {type:"sawtooth", vol:.2, at, cutoff:900, bus:pumpBus()});
-      if (lvl >= 3 && s % 2 === 1){ const g = pluck(ch[(s>>1)%3] + 24, at, STEP*1.2, .05, "square"); if (g) g.connect(delay); }
-    }, beat(s){ return s % 4 === 0; } },
-    dubstep: { name:"Dubstep", bpm:[138,145], step(S, b, s, at, lvl){
-      const ch = S.chords[b];
-      if (s === 0 || (lvl >= 2 && s === 10) || (lvl >= 3 && s === 3)) kick(at);
-      if (s === 8) snare(at); if (lvl >= 3 && s === 15) snare(at, "clap");
-      if (s % 2 === 0) hat(at, false, .05); if (lvl >= 3 && s % 2 === 1) hat(at, false, .03);
-      if (lvl < 2 && s === 0) supersaw(ch, at, STEP*16, .03, 1200, false, .4);
-      if (lvl >= 1 && lvl < 2 && s === 0) tone(hz(ch[0] - 24), STEP*16, {type:"sine", vol:.3, at, bus:B()});
-      if (lvl >= 2 && (s === 0 || s === 8)){ const rates = S.wob[(b*2 + (s ? 1 : 0)) % S.wob.length]; wobble(ch[0] - 24, at, STEP*8, rates * S.bpm / 60 / 2, .2); }
-    } },
-    dnb: { name:"Drum & Bass", bpm:[170,176], step(S, b, s, at, lvl){
-      const ch = S.chords[b];
-      if (s === 0 || s === 10 || (lvl >= 3 && s === 6)) kick(at);
-      if (s === 4 || s === 12) snare(at); if (lvl >= 2 && (s === 7 || s === 14)) noise(.08, {vol:.07, at, hp:1500, bus:B()});
-      hat(at, false, s % 2 ? .035 : .055); if (lvl >= 1 && s % 8 === 6) hat(at, true);
-      if (s === 0) supersaw(ch, at, STEP*16, .028, 1400, false, .3);
-      if (lvl >= 1 && (s === 0 || s === 10)) reese(ch[0] - 24 + (s === 10 && b % 2 ? 7 : 0), at, STEP*(s === 0 ? 9 : 5), .16);
-      if (lvl >= 3 && s % 4 === 2){ const g = pluck(ch[(s>>2)%3] + 24, at, STEP*2, .05, "triangle"); if (g) g.connect(delay); }
-    } },
-    chip: { name:"Chiptune", bpm:[148,158], step(S, b, s, at, lvl){
-      const ch = S.chords[b];
-      if (s % 8 === 0 || (lvl >= 3 && s === 12)) kick(at, "chip");
-      if (s === 4 || s === 12) snare(at, "chip");
-      if (s % 2 === 0) noise(.02, {vol:.05, at, hp:9000, bus:B()});
-      // signature fast arpeggio, octave-jumping
-      const arp = [ch[0], ch[1], ch[2], ch[0]+12][s % 4] + 12 + (lvl >= 4 && s % 8 >= 4 ? 12 : 0);
-      tone(hz(arp), STEP*.9, {type:"square", vol: lvl >= 2 ? .06 : .085, at, cutoff:3500, bus:B()});
-      if (lvl >= 1 && s % 2 === 0) tone(hz(ch[0] - 12 + (s % 4 === 2 ? 12 : 0)), STEP*1.7, {type:"triangle", vol:.36, at, bus:B()});
-    } },
-    trance: { name:"Trance", bpm:[136,140], step(S, b, s, at, lvl){
-      const ch = S.chords[b];
-      kick(at); if (lvl >= 1 && (s === 4 || s === 12)) snare(at, "clap");
-      if (s % 4 === 2) hat(at, true, .07); if (lvl >= 3) hat(at, false, .025);
-      if (lvl >= 1 && s % 4 !== 0) tone(hz(ch[0] - 24 + (s % 4 === 3 ? 12 : 0)), STEP*.9, {type:"sawtooth", vol:.17, at, cutoff:800, bus:pumpBus()});
-      if (lvl >= 2){ if (s % 2 === 0 && (S.gate >> (s/2)) & 1) supersaw(ch.map(n => n + 12), at, STEP*1.6, .035, 3500, false); }
-      else if (s === 0) supersaw(ch, at, STEP*16, .03, 1500, true, .3);
-      if (lvl >= 3 && s % 2 === 1){ const g = pluck(ch[(s>>1)%3] + 24, at, STEP*1.3, .04, "sawtooth"); if (g) g.connect(delay); }
-    } },
-    future: { name:"Future Bass", bpm:[146,154], step(S, b, s, at, lvl){
-      const ch = S.chords[b];
-      if (s === 0 || (lvl >= 1 && s === 11)) kick(at, "808");
-      if (s === 8) snare(at, "clap");
-      if (lvl >= 1){ if (s % 2 === 0) hat(at, false, .05); if (b % 2 === 1 && s >= 12){ hat(at, false, .04); hat(at + STEP/2, false, .035); } }
-      if (lvl >= 1 && (s === 0 || s === 11)) bass808(ch[0] - 24, at, STEP*(s === 0 ? 10 : 5), s === 11 ? ch[0] - 19 : 0);
-      if (lvl < 2 && s === 0) supersaw(ch.map(n => n + 12), at, STEP*16, .03, 1800, false, .25);
-      if (lvl >= 2 && S.chops.includes(s)) supersaw(ch.map(n => n + 12), at, STEP*1.8, .05, 3800, true, .05);
-      if (lvl >= 3 && s % 4 === 3) tone(hz(ch[2] + 24), STEP, {type:"sine", vol:.06, at, slide: hz(ch[2] + 26), bus:B()});
-    } },
-  };
-  const GENRE_KEYS = Object.keys(GENRES);
-
-  // ---- per-car song: genre + key + tempo + sound + catchy hook ----
-  const PROGS = { minor: [[0,5,2,6],[0,6,5,6],[5,6,0,0],[0,3,5,4],[0,5,3,4],[0,2,5,6]], major: [[0,4,5,3],[5,3,0,4],[0,3,4,4],[3,4,5,5]] };
-  const RHYTHMS = ["x.x.x..x.x.x..x.","x..x..x.x..x..x.","x.xxx.x.x.xxx.x.","x...x.x.x...x.x.","xx.x.xx.xx.x.xx.","x..x..x...x.x.x.","x.x.x.x.xxx.x...","x..x.x..x..x.x.x"];
-  const MYTHIC_SONGS = {   // fixed picks so each Mythic's song is hand-chosen
-    "Volcano Night": { genre:"dubstep", root:52, minor:true, seed:11 },
-    "Synthwave Grid": { genre:"electro", root:53, minor:true, seed:23 },
-    "Golden Hour": { genre:"future", root:48, minor:false, seed:37 },
-    "Neo City 2099": { genre:"chip", root:50, minor:true, seed:41 },
-    "Night Race Circuit": { genre:"dnb", root:52, minor:true, seed:59 },
-    "Frozen Tundra": { genre:"trance", root:50, minor:true, seed:71 },
-    "Space Highway": { genre:"electro", root:47, minor:true, seed:83 },
-    "Deep Sea": { genre:"future", root:45, minor:true, seed:97 },
-  };
-  const genCache = {};
-  function songForCar(c){
-    if (genCache[c.id]) return genCache[c.id];
-    const th = themeFor(c), fixed = th ? MYTHIC_SONGS[th.world] : null;
-    let a = ((fixed ? fixed.seed : c.id + 101) * 2654435761) >>> 0;
-    const R = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-    const pick = arr => arr[Math.floor(R()*arr.length)];
-    const genre = fixed ? fixed.genre : GENRE_KEYS[(c.id * 7 + Math.floor(c.id / 6)) % GENRE_KEYS.length];
-    const minor = fixed ? fixed.minor : R() < .75;
-    const scale = minor ? [0,2,3,5,7,8,10] : [0,2,4,5,7,9,11];
-    const root = fixed ? fixed.root : 45 + Math.floor(R()*9);
-    const prog = pick(PROGS[minor ? "minor" : "major"]);
-    const note = d => root + 12 + scale[((d % 7) + 7) % 7] + 12*Math.floor(d / 7);
-    const chords = prog.map(d => [note(d), note(d+2), note(d+4)]);
-    const [lo, hi] = GENRES[genre].bpm;
-    // hook: one rhythm + a contour over chord tones, repeated A A A B so it sticks
-    const rhyA = pick(RHYTHMS), rhyB = pick(RHYTHMS), contour = Array.from({length:16}, () => pick([0,1,2,3,2,1,4]));
-    const octave = genre === "chip" ? 24 : 12;
-    const bars = [0,1,2,3].map(b => { const rhy = b === 3 ? rhyB : rhyA; let k = 0;
-      return [...rhy].map((ch, i) => { if (ch !== "x") return null; const ci = (b === 3 ? 4 - contour[k] : contour[k]) ; k++;
-        const tones = chords[b]; return tones[ci % 3] + octave + 12*Math.floor(ci / 3); }); });
-    const lead = genre === "chip" ? {kind:"tone", wave:"square", cutoff:4000, echo:true}
-      : pick([{kind:"supersaw", cutoff:4500}, {kind:"pluck", wave:"sawtooth"}, {kind:"tone", wave:"square", cutoff:3000, echo:true}, {kind:"pluck", wave:"square"}, {kind:"supersaw", cutoff:3000}]);
-    const song = { genre, bpm: lo + Math.floor(R()*(hi - lo + 1)), chords, bars, lead,
-      wob: [pick([2,4,4,8]), pick([4,8,3,6]), pick([2,8,4]), pick([6,8,12])], gate: pick([0b11011011, 0b10111011, 0b11101110, 0b10110111]),
-      chops: pick([[0,3,6,10,12],[0,3,6,8,11,14],[0,2,6,10,13],[0,4,6,10,12,14]]) };
-    return genCache[c.id] = song;
-  }
-  function genreName(c){ return GENRES[songForCar(c).genre].name; }
-
-  let song = null, STEP = .12, lvl = 0, playing = false, step = 0, nextT = 0, timer = null, pendingImpact = false;
-  function schedule(){
-    while (nextT < ac.currentTime + .15){
-      const S = song, b = Math.floor(step / 16) % 4, s = step % 16, at = Math.max(0, nextT - ac.currentTime);
-      if (pendingImpact && s === 0){ impact(at); pendingImpact = false; }
-      GENRES[S.genre].step(S, b, s, at, lvl);
-      // the hook comes in at the drop (round 3), doubled an octave up from round 5
-      if (lvl >= 2){ const n = S.bars[b][s]; if (n){ leadNote(S, n, at, STEP*1.8); if (lvl >= 4) pluck(n + 12, at, STEP*1.5, .035, "triangle"); } }
-      // a riser in the last bar before the drop
-      if (lvl === 1 && b === 3 && s === 0) riser(at, STEP*16);
-      step++; nextT += STEP;
-    }
-  }
-  function setRound(r){
-    const old = lvl; lvl = Math.max(0, Math.min(4, r - 1));
-    if (song) STEP = 60 / (song.bpm + Math.min(12, (r - 1)*3)) / 4;
-    if (lvl === 2 && old === 1) pendingImpact = true;
-  }
-  function musicTarget(){ return prefs.music && playing ? MUSIC_VOL : 0; }
-  function fadeMusic(to, secs){ if (!ac) return; const t = ac.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setValueAtTime(musicBus.gain.value, t); musicBus.gain.linearRampToValueAtTime(to, t + secs); }
-  function musicStart(car){
-    if (!wake()) return;
-    const sg = songForCar(car); if (sg !== song){ song = sg; step = 0; } pendingImpact = false; setRound(1);
-    if (!playing){ playing = true; step = 0; nextT = ac.currentTime + .08; clearInterval(timer); timer = setInterval(schedule, 25); }
-    fadeMusic(musicTarget(), .6);
-  }
-  function musicStop(){
-    if (!ac || !playing) return;
-    fadeMusic(0, 1.2); playing = false;
-    clearTimeout(musicStop.t); musicStop.t = setTimeout(() => { if (!playing) clearInterval(timer); }, 1300);
-  }
-  function duck(on){ if (ac && playing) fadeMusic(on ? musicTarget()*.35 : musicTarget(), .3); }
-  function setMusic(on){ prefs.music = on; LS.set(PREFIX + "music", on ? "on" : "off"); if (ac) fadeMusic(musicTarget(), .3); renderSoundButtons(); }
   function setSfx(on){ prefs.sfx = on; LS.set(PREFIX + "sfx", on ? "on" : "off"); if (ac) sfxBus.gain.value = on ? SFX_VOL : 0; renderSoundButtons(); }
   document.addEventListener("visibilitychange", () => { if (!ac) return; if (document.hidden) ac.suspend().catch(()=>{}); else ac.resume().catch(()=>{}); });
   // first touch or key anywhere unlocks audio (iPhone needs this)
   const unlock = () => wake();
   ["pointerdown","touchend","keydown"].forEach(ev => document.addEventListener(ev, unlock, {passive:true}));
-  return Object.assign(fx, { prefs, wake, musicStart, musicStop, duck, setMusic, setSfx, setRound, genreName });
+  const noop = () => {};
+  return Object.assign(fx, { prefs, wake, setSfx, musicStart: noop, musicStop: noop, duck: noop, setRound: noop });
 })();
 function renderSoundButtons(){
   document.querySelectorAll("[data-snd]").forEach(b => {
     const kind = b.dataset.snd, on = Sound.prefs[kind];
     b.setAttribute("aria-pressed", on);
-    b.textContent = (kind === "music" ? "Music" : "Sound") + (on ? ": On" : ": Off");
+    b.textContent = "Sound" + (on ? ": On" : ": Off");
   });
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-snd]"); if (!b) return;
   e.stopPropagation();
-  if (b.dataset.snd === "music") Sound.setMusic(!Sound.prefs.music); else Sound.setSfx(!Sound.prefs.sfx);
+  Sound.setSfx(!Sound.prefs.sfx);
   if (Sound.prefs.sfx) Sound.click();
   b.blur();
 });
@@ -1477,10 +1268,11 @@ function openChest(){
   if (c.tier >= 4) later(fx.dur*.85, () => el.style.setProperty("--shk", ".05s"));
   if (c.tier >= 5) later(.3, () => el.classList.add("dim"));
   cfOpen = true; cfRevealed = false; document.body.style.overflow = "hidden";
-  $("cfTier").textContent = t.name; $("cfTier").style.color = t.color;
-  $("cfName").textContent = c.name; $("cfName").style.color = c.tier >= 3 ? t.color : "var(--ink)"; $("cfName").classList.toggle("creator", isCreator(c));
-  $("cfNote").textContent = (themeFor(c) ? `Unlocks the ${themeFor(c).world} world · ` : "") + (isNew ? `New car! ${carNo(c)} of ${CHARS.length}` : `You already had this one · +${t.refund} coins back`);
+  $("cfTier").textContent = ""; $("cfName").textContent = ""; $("cfNote").textContent = "";
   later(fx.dur, () => {
+    $("cfTier").textContent = t.name; $("cfTier").style.color = t.color;
+    $("cfName").textContent = c.name; $("cfName").style.color = c.tier >= 3 ? t.color : "var(--ink)"; $("cfName").classList.toggle("creator", isCreator(c));
+    $("cfNote").textContent = (themeFor(c) ? `Unlocks the ${themeFor(c).world} world · ` : "") + (isNew ? `New car! ${carNo(c)} of ${CHARS.length}` : `You already had this one · +${t.refund} coins back`);
     el.classList.remove("shaking","dim"); el.classList.add("revealed"); cfRevealed = true; Sound.reveal(c.tier);
     if (fx.flash){ const f = $("cfFlash"); f.classList.remove("go","go2"); void f.offsetWidth; f.classList.add(c.tier >= 5 ? "go2" : "go"); }
     if (c.tier >= 4){ el.classList.remove("quake"); void el.offsetWidth; el.classList.add("quake"); }
